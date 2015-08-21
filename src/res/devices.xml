@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<devices>
+    <device>
+		<manufacturer>Arduino</manufacturer>
+	    <name>Mega 2560</name>
+		<id>0x1e9801</id>
+		<programmer>STK500v2</programmer>
+		<programmer>AVRISP</programmer>
+		<programmer>AVRJTAG</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0</start>
+			<size>0x40000</size>
+			<pagesize>256</pagesize>
+			<type>2</type>
+		</section>
+		<section class="HexWritePage">
+			<name>EEPROM</name>
+			<start>0x40000</start>
+			<size>0x1000</size>
+			<pagesize>8</pagesize>
+			<type>2</type>
+		</section>
+		<section class="Hex">
+			<name>FUSES</name>
+			<start>0x50000</start>
+			<blank>0x62d9ffffff</blank>
+			<size>5</size>
+			<type>2</type>
+		</section>
+	</device>
+</devices>
