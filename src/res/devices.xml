@@ -2,6 +2,36 @@
 <devices>
 	<device>
 		<manufacturer>Arduino</manufacturer>
+		<name>Mega 328P (Uno, mini...)</name>
+		<id>0x1e950f</id>
+		<programmer>STK500</programmer>
+		<programmer>AVRISP</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0</start>
+			<size>0x8000</size>
+			<pagesize>128</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+		<section class="HexWritePage">
+			<name>EEPROM</name>
+			<start>0x8000</start>
+			<size>0x400</size>
+			<pagesize>4</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+		<section class="Hex">
+			<name>FUSES</name>
+			<start>0x8400</start>
+			<blank>0x62d9ffff</blank>
+			<size>4</size>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>Arduino</manufacturer>
 		<name>Mega 2560</name>
 		<id>0x1e9801</id>
 		<programmer>STK500v2</programmer>
