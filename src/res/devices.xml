@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <devices>
-    <device>
+	<device>
 		<manufacturer>Arduino</manufacturer>
-	    <name>Mega 2560</name>
+		<name>Mega 2560</name>
 		<id>0x1e9801</id>
 		<programmer>STK500v2</programmer>
 		<programmer>AVRISP</programmer>

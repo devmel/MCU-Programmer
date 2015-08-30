@@ -7,5 +7,6 @@
 			<attribute name="javadoc_location" value="http://www.devmel.com/en/developer/java-sdk/docs/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="libs/rxtx_Library.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
