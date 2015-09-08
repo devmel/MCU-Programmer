@@ -25,6 +25,7 @@ public class STK500v2 implements IProgramming{
 	private final OutputStream outStream;
 	private int seq = 1;
 	private boolean state = false;
+	private int cmdtimeoutMs = 3000;
 	
 	private IUart port;
 
@@ -62,6 +63,8 @@ public class STK500v2 implements IProgramming{
 	@Override
 	public void close() {
 		state=false;
+		int t=cmdtimeoutMs;
+		cmdtimeoutMs = 100;
 		try {
 			transfer(new byte[]{0x11});
 			outStream.close();
@@ -71,6 +74,7 @@ public class STK500v2 implements IProgramming{
 		if(port!=null){
 			port.close();
 		}
+		cmdtimeoutMs = t;
 	}
 	
 	@Override
@@ -178,9 +182,11 @@ public class STK500v2 implements IProgramming{
 			int state = 0;
 			long end = System.currentTimeMillis();
 			long timeout = end;
-			end += 3000;
+			end += cmdtimeoutMs;
 			while ((state < 7) && timeout<end) {
-				int c = inStream.read();
+				int c = 0;
+				if(inStream.available()>0)
+					c = inStream.read();
 				if (c < 0) {
 					break;
 				}

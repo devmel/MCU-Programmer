@@ -45,9 +45,12 @@ public class STK500 implements IProgramming{
 		if(port!=null){
 			boolean open = false;
 			for(int i=0; i<baudrates.length && open==false; i++){
-				port.setParameters(baudrates[i], 8, 1, 0);
-				port.open();
-				open = enterProg();
+				try{
+					port.setParameters(baudrates[i], 8, 1, 0);
+					port.open();
+					open = enterProg();
+				}catch(IOException e){
+				}
 			}
 			state = open;
 		}else{
@@ -58,6 +61,8 @@ public class STK500 implements IProgramming{
 
 	@Override
 	public void close() {
+		int t=cmdtimeoutMs;
+		cmdtimeoutMs = 100;
 		state=false;
 		try {
 			transfer(new byte[]{'Q',' '},0);
@@ -68,6 +73,7 @@ public class STK500 implements IProgramming{
 		if(port!=null){
 			port.close();
 		}
+		cmdtimeoutMs = t;
 	}
 	
 	public byte[] version() throws IOException{
@@ -105,6 +111,8 @@ public class STK500 implements IProgramming{
 			}else if(memoryName.equals(MEMORY_EEPROM)){
 				commandLoadAddress((addr>>1)&0xffff);
 				ret = commandRead(size, true);
+			}else{
+				throw new IOException("Not supported");
 			}
 		}
 		return ret;
@@ -125,6 +133,8 @@ public class STK500 implements IProgramming{
 			}else if(memoryName.equals(MEMORY_EEPROM)){
 				commandLoadAddress((addr>>1)&0xffff);
 				ret = commandWrite(data, true);
+			}else{
+				throw new IOException("Not supported");
 			}
 		}
 		return ret;
@@ -145,7 +155,7 @@ public class STK500 implements IProgramming{
 
 		// Read and decode response
 		if(resultSize>=0){
-	//		System.out.print("Read : ");
+//			System.out.print("Read : ");
 			int state = 0;
 			result = new byte[resultSize];
 			try {
@@ -154,11 +164,12 @@ public class STK500 implements IProgramming{
 				long timeout = end;
 				end += cmdtimeoutMs;
 				while ((state < 3) && timeout<end) {
-					int c = inStream.read();
+					int c = 0;
+					if(inStream.available()>0)
+						c = inStream.read();
 					if (c < 0) {
 						break;
 					}
-//					System.out.print(Hexadecimal.fromByte((byte) c));
 
 					switch (state) {
 				      case 0:
@@ -192,7 +203,7 @@ public class STK500 implements IProgramming{
 				    timeout = System.currentTimeMillis();
 				}
 			} catch (Exception e) {
-//				e.printStackTrace();
+	//			e.printStackTrace();
 			}
 			if(state!=3){
 				result = null;
@@ -206,7 +217,7 @@ public class STK500 implements IProgramming{
 	private boolean enterProg() throws IOException{
 		boolean ret = false;
 		int t=cmdtimeoutMs;
-		cmdtimeoutMs = 100;
+		cmdtimeoutMs = 150;
 		//Enter programming mode
 		transfer(new byte[]{'P',' '},0);
 		//Enter programming mode
