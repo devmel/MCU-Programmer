@@ -63,21 +63,20 @@ public class MainController {
 		Vector<String> list = new Vector<String>();
 		String[] sysDeviceList = Uart.list();
 		if(sysDeviceList!=null){
-		for(String devStr:sysDeviceList){
-			list.add(devStr);
-		}
-		}
-		
-		
-		String[] ipDeviceList = this.devices.getChildNames();
-		if(ipDeviceList!=null){
-		for(String devStr:ipDeviceList){
-			SimpleIPConfig dev = SimpleIPConfig.createFromNode(devices, devStr);
-			if(dev!=null){
-				devStr = devStr+" - "+dev.getIpAsText();
+			for(String devStr:sysDeviceList){
 				list.add(devStr);
 			}
 		}
+		
+		String[] ipDeviceList = this.devices.getChildNames();
+		if(ipDeviceList!=null){
+			for(String devStr:ipDeviceList){
+				SimpleIPConfig dev = SimpleIPConfig.createFromNode(devices, devStr);
+				if(dev!=null){
+					devStr = devStr+" - "+dev.getIpAsText();
+					list.add(devStr);
+				}
+			}
 		}
 		String[] bList = new String[list.size()];
 		list.toArray(bList);
@@ -327,7 +326,7 @@ public class MainController {
 				String status = null;
 				if(program!=null && program.isOpen()==true){
 					try{
-						if(memory.read(program, tabdata.rawdata, 0)<0){
+						if(memory.read(gui.statusBar, program, tabdata.rawdata, 0)<0){
 							status = Language.getString("MainController.13")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}
 					}catch(IOException e) {
@@ -349,7 +348,7 @@ public class MainController {
 				String status = null;
 				if(program!=null && program.isOpen()==true){
 					try{
-						if(memory.write(program, tabdata.rawdata, 0)<0){
+						if(memory.write(gui.statusBar, program, tabdata.rawdata, 0)<0){
 							status = Language.getString("MainController.15")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}
 					}catch(IOException e) {
@@ -371,7 +370,7 @@ public class MainController {
 				String status = null;
 				if(program!=null && program.isOpen()==true){
 					try{
-						int verif = memory.verify(program, tabdata.rawdata, 0);
+						int verif = memory.verify(gui.statusBar, program, tabdata.rawdata, 0);
 						if(verif<-1){
 							status = Language.getString("MainController.17")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}else if(verif==-1){
@@ -475,7 +474,7 @@ public class MainController {
 		}
 		gui.statusBar.setStatus(status);
 		if(progress==true){
-			gui.statusBar.startProgress();
+			gui.statusBar.startProgress(-1);
 		}else{
 			gui.statusBar.stopProgress();
 		}
@@ -547,8 +546,6 @@ public class MainController {
 			try {Thread.sleep(1);} catch (InterruptedException e) {}
 		}
 	}
-
-
 	
 	private void execute(Runnable r){
 		cancel();
@@ -561,7 +558,6 @@ public class MainController {
 			thread = null;
 		}
 	}
-
 	
 	public enum DeviceType{
 		LINKBUS("com.devmel.programming.linkbus"),
@@ -573,6 +569,4 @@ public class MainController {
 			this.packageName = packageName;
 		}
 	}
-
-
 }

@@ -2,6 +2,7 @@ package com.devmel.apps.mcuprogrammer.memories;
 
 import java.io.IOException;
 
+import com.devmel.apps.mcuprogrammer.view.IStatus;
 import com.devmel.programming.IProgramming;
 
 public class MemoryHex extends Memory{
@@ -26,10 +27,15 @@ public class MemoryHex extends Memory{
 		this.blank = new byte[]{(byte) 0xff};
 	}
 	
-	public int verify(IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
+	public int verify(IStatus status, IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
 		int ret = -1;
 		if (program!=null && program.isOpen()==true) {
-			for (progAddress = fromAddr; progAddress < this.size;) {
+			progAddress = fromAddr;
+			while (progAddress < this.size && !Thread.interrupted()){
+				double percent = progAddress * 100;
+				percent /= this.size;
+				status.startProgress((int) percent);
+				
 				int blockSize = this.size-progAddress;
 				if(blockSize>maxBlockSize){
 					blockSize = maxBlockSize;
@@ -72,10 +78,15 @@ public class MemoryHex extends Memory{
 		return ret;
 	}
 	
-	public int read(IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
+	public int read(IStatus status, IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
 		int ret = -1;
 		if (program!=null && program.isOpen()==true) {
-			for (progAddress = fromAddr; progAddress < this.size && !Thread.interrupted();) {
+			progAddress = fromAddr;
+			while (progAddress < this.size && !Thread.interrupted()){
+				double percent = progAddress * 100;
+				percent /= this.size;
+				status.startProgress((int) percent);
+				
 				int blockSize = this.size-progAddress;
 				if(blockSize>maxBlockSize){
 					blockSize = maxBlockSize;
@@ -103,10 +114,15 @@ public class MemoryHex extends Memory{
 		}
 		return ret;
 	}
-	public int write(IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
+	public int write(IStatus status, IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
 		int ret = -1;
 		if (program!=null && program.isOpen()==true) {
-			for (progAddress = fromAddr; progAddress < this.size;) {
+			progAddress = fromAddr;
+			while (progAddress < this.size && !Thread.interrupted()){
+				double percent = progAddress * 100;
+				percent /= this.size;
+				status.startProgress((int) percent);
+				
 				// Build block
 				int maxSize = maxBlockSize;
 				if ((this.startAddr + progAddress + maxSize) > rawdata.length) {
