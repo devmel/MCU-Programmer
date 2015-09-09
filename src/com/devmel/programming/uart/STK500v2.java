@@ -184,7 +184,9 @@ public class STK500v2 implements IProgramming{
 			long timeout = end;
 			end += cmdtimeoutMs;
 			while ((state < 7) && timeout<end) {
-				int c = 0;
+				int c = -1;
+				while (inStream.available() <= 0 && timeout<end)
+					timeout = System.currentTimeMillis();
 				if(inStream.available()>0)
 					c = inStream.read();
 				if (c < 0) {
