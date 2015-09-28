@@ -22,7 +22,7 @@ public class STK500v2 extends com.devmel.programming.uart.STK500v2{
 
 	@Override
 	public boolean open() throws IOException {
-		port.setInterruptMode(true, 1000);
+		port.setInterruptMode(true, 0);
 		port.setParameters(115200, 8, 1, 0);
 		port.open();
 

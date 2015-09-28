@@ -24,7 +24,7 @@ public class STK500 extends com.devmel.programming.uart.STK500{
 	public boolean open() throws IOException {
 		port.open();
 		//Try multiples rates
-		port.setInterruptMode(true, 500);
+		port.setInterruptMode(true, 0);
 		port.setReset(true);
 		boolean open = false;
 		for(int i=0; i<baudrates.length && open==false; i++){
