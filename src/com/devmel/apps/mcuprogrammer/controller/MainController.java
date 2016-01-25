@@ -86,7 +86,7 @@ public class MainController {
 	
 	/******************************** IP DEVICE *********************************/
 	public void selectDevice(final String name) {
-		deviceCancel();
+		deviceUnbuild(false);
 		deviceType = null;
 		deviceName = null;
 		if (name != null && !name.equals(Language.getString("MainController.2"))) {
@@ -128,8 +128,8 @@ public class MainController {
 				device.setLock(selected);
 				device.save(devices);
 			}
+			selectManufacturer("");
 		}
-		deviceBuild();
 	}
 	
 	public void addIPDeviceClick() {
@@ -185,7 +185,7 @@ public class MainController {
 	}
 	
 	public void selectTarget(String target){
-		deviceCancel();
+		deviceUnbuild(false);
 		//Get config
 		String[] programmers = targetsConfig.programmers(target);
 		if(programmers!=null && programmers.length>0){
@@ -219,7 +219,7 @@ public class MainController {
 	}
 	
 	public void selectProgrammer(String programmer){
-		deviceCancel();
+		deviceUnbuild(false);
 		if(programmer!=null && programmer.equals("")){
 			this.programmer=null;
 		}else{
@@ -236,14 +236,13 @@ public class MainController {
 			c=program.isOpen();
 		}
 		final boolean close = c;
-		deviceCancelWait();
-		deviceBuild();
 		startCommunication();
 		Runnable r = new Runnable() {
 			public void run() {
 				String status = null;
 				if(deviceName!=null){
 					if(close==false){
+						deviceBuild();
 						if(program!=null){
 							//Open target
 							try {
@@ -260,6 +259,8 @@ public class MainController {
 						}else{
 							status = (Language.getString("MainController.6"));
 						}
+					}else{
+						deviceUnbuild(true);
 					}
 				}else{
 					status = (Language.getString("MainController.7"));
@@ -425,7 +426,7 @@ public class MainController {
 	}
 
 	public void exitClick(){
-		deviceCancelWait();
+		deviceUnbuild(true);
 		System.exit(0);
 	}
 
@@ -491,62 +492,62 @@ public class MainController {
 	}
 	
 	private synchronized void deviceBuild(){
-		if(programmer!=null){
-			if(deviceType!=null && deviceName!=null){
-				//Load class
-				Class<?> c = null;
-				try {
-					c = Class.forName(deviceType.packageName+"."+programmer);
-				} catch (ClassNotFoundException e) {
-				}
-				if(c!=null){
-					Object device = null;
+		if(program == null && programmer != null 
+				&& deviceType != null && deviceName != null){
+			//Load class
+			Class<?> c = null;
+			try {
+				c = Class.forName(deviceType.packageName+"."+programmer);
+			} catch (ClassNotFoundException e) {
+			}
+			if(c!=null){
+				Object device = null;
 
-					if(deviceType==DeviceType.UART){
-						try {
-							device = new Uart(deviceName);
-						} catch (IOException e) {
-							e.printStackTrace();
-							device=null;
-						}
+				if(deviceType==DeviceType.UART){
+					try {
+						device = new Uart(deviceName);
+					} catch (IOException e) {
+						e.printStackTrace();
+						device=null;
 					}
-					else if(deviceType==DeviceType.LINKBUS){
-						device = SimpleIPConfig.createFromNode(devices, deviceName);
-					}
-					if(device!=null){
-						try {
-							Constructor<?> constructor = c.getConstructor(device.getClass());
-							IProgramming o = (IProgramming)constructor.newInstance(device);
-							program = o;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
+				}
+				else if(deviceType==DeviceType.LINKBUS){
+					device = SimpleIPConfig.createFromNode(devices, deviceName);
+				}
+				if(device!=null){
+					try {
+						Constructor<?> constructor = c.getConstructor(device.getClass());
+						IProgramming o = (IProgramming)constructor.newInstance(device);
+						program = o;
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 			}
 		}
 	}
-	private synchronized void deviceCancel(){
+	private synchronized void deviceUnbuild(boolean wait){
 		cancel();
 		Runnable r = new Runnable() {
 			public void run() {
 				if(program!=null){
-					program.close();
+					IProgramming tmp = program;
+					program = null;
+					gui.targetSelectionBar.setOpened(false);
+					tmp.close();
+					stopCommunication(null);
 				}
-				gui.targetSelectionBar.setOpened(false);
-				program = null;
-				stopCommunication(null);
 			}
 		};
-		execute(r);
-	}
-	private synchronized void deviceCancelWait(){
-		deviceCancel();
-		while(thread.isAlive()==true){
-			try {Thread.sleep(1);} catch (InterruptedException e) {}
+		Thread t = new Thread(r);
+		t.start();
+		if(wait == true){
+			while(t.isAlive()==true){
+				try {Thread.sleep(1);} catch (InterruptedException e) {}
+			}
 		}
 	}
-	
+
 	private void execute(Runnable r){
 		cancel();
 		thread = new Thread(r);
