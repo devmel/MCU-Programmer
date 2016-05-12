@@ -1,4 +1,4 @@
-package com.devmel.apps.mcuprogrammer.memories;
+package com.devmel.apps.mcuprogrammer.sections;
 
 import java.io.IOException;
 

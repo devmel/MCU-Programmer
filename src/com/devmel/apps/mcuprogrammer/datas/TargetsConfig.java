@@ -13,9 +13,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.devmel.apps.mcuprogrammer.memories.Memory;
-import com.devmel.apps.mcuprogrammer.memories.MemoryHex;
-import com.devmel.apps.mcuprogrammer.memories.MemoryHexWriteSector;
+import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
+import com.devmel.apps.mcuprogrammer.sections.MemoryHexWriteSector;
+import com.devmel.apps.mcuprogrammer.sections.WiringDiagram;
 
 public class TargetsConfig {
 	private Document doc;
@@ -30,39 +30,38 @@ public class TargetsConfig {
 		}
 	}
 
-	public Memory[] sections(String deviceName){
-		ArrayList<Memory> programmers = new ArrayList<Memory>();
+	public Object[] sections(String deviceName){
+		ArrayList<Object> sectionsList = new ArrayList<Object>();
 		Element device = getDevice(deviceName);
 		if(device!=null){
 			NodeList nList = device.getChildNodes();
-	
-			
 			for (int i = 0; i < nList.getLength(); i++) {
 				try{
 					Node nNode = nList.item(i);
 					if(nNode.getNodeName().equalsIgnoreCase("section")){
 						Element eElement = (Element) nNode;
 						String className = eElement.getAttributeNode("class").getNodeValue();
+						//Wiring
+						if(className.equals("WiringDiagram")){
+							String imageName = null;
+							String voltage = null;
+							try {
+								imageName = eElement.getElementsByTagName("image").item(0).getTextContent();
+								voltage = eElement.getElementsByTagName("voltage").item(0).getTextContent();
+							} catch (Exception e) {}
+							if(imageName != null && voltage != null)
+								sectionsList.add(new WiringDiagram(imageName, voltage));
+						}
 						//Hex class
-						if(className.startsWith("Hex")){
+						else if(className.startsWith("Hex")){
 							int readStartInt = 0;
 							int writeStartInt = 0;
 							
 							String name = eElement.getElementsByTagName("name").item(0).getTextContent();
 							String start = eElement.getElementsByTagName("start").item(0).getTextContent();
-							int startInt = 0;
-							if(start.startsWith("0x")){
-								startInt = Integer.parseInt(start.substring(2),16);
-							}else{
-								startInt = Integer.parseInt(start);
-							}
+							int startInt = Integer.decode(start);
 							String size = eElement.getElementsByTagName("size").item(0).getTextContent();
-							int sizeInt = 0;
-							if(size.startsWith("0x")){
-								sizeInt = Integer.parseInt(size.substring(2),16);
-							}else{
-								sizeInt = Integer.parseInt(size);
-							}
+							int sizeInt = Integer.decode(size);
 							NodeList b = eElement.getElementsByTagName("blank");
 							byte[] blankArray = new byte[]{(byte) 0xff};
 							if(b!=null && b.item(0)!=null){
@@ -77,44 +76,26 @@ public class TargetsConfig {
 							}
 							
 							String type = eElement.getElementsByTagName("type").item(0).getTextContent();
-							int typeInt = 0;
-							if(type.startsWith("0x")){
-								typeInt = Integer.parseInt(type.substring(2),16);
-							}else{
-								typeInt = Integer.parseInt(type);
-							}
+							int typeInt = Integer.decode(type);
 							
 							NodeList nodeDevicestart = eElement.getElementsByTagName("readstart");
 							if(nodeDevicestart!=null && nodeDevicestart.item(0)!=null){
 								String devicestart = nodeDevicestart.item(0).getTextContent();
-								if(devicestart.startsWith("0x")){
-									readStartInt = Integer.parseInt(devicestart.substring(2),16);
-								}else{
-									readStartInt = Integer.parseInt(devicestart);
-								}
+								readStartInt = Integer.decode(devicestart);
 							}
 
 							nodeDevicestart = eElement.getElementsByTagName("writestart");
 							if(nodeDevicestart!=null && nodeDevicestart.item(0)!=null){
 								String devicestart = nodeDevicestart.item(0).getTextContent();
-								if(devicestart.startsWith("0x")){
-									writeStartInt = Integer.parseInt(devicestart.substring(2),16);
-								}else{
-									writeStartInt = Integer.parseInt(devicestart);
-								}
+								writeStartInt = Integer.decode(devicestart);
 							}
 							
 							if(className.equalsIgnoreCase("HexWritePage")){
 								String pagesize = eElement.getElementsByTagName("pagesize").item(0).getTextContent();
-								int pagesizeInt = 0;
-								if(pagesize.startsWith("0x")){
-									pagesizeInt = Integer.parseInt(pagesize.substring(2),16);
-								}else{
-									pagesizeInt = Integer.parseInt(pagesize);
-								}
-								programmers.add(new MemoryHexWriteSector(name, startInt, readStartInt, writeStartInt, sizeInt, pagesizeInt, typeInt, blankArray));
+								int pagesizeInt = Integer.decode(pagesize);
+								sectionsList.add(new MemoryHexWriteSector(name, startInt, readStartInt, writeStartInt, sizeInt, pagesizeInt, typeInt, blankArray));
 							}else if(className.equalsIgnoreCase("Hex")){
-								programmers.add(new MemoryHex(name, startInt, readStartInt, writeStartInt, sizeInt, typeInt, blankArray));
+								sectionsList.add(new MemoryHex(name, startInt, readStartInt, writeStartInt, sizeInt, typeInt, blankArray));
 							}
 						}
 					}
@@ -123,8 +104,8 @@ public class TargetsConfig {
 				}
 			}
 		}
-		Memory[] sections = new Memory[programmers.size()];
-		sections = programmers.toArray(sections);
+		Object[] sections = new Object[sectionsList.size()];
+		sections = sectionsList.toArray(sections);
 		return sections;
 	}
 

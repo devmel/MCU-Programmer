@@ -10,8 +10,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.devmel.apps.mcuprogrammer.memories.Memory;
-import com.devmel.apps.mcuprogrammer.memories.MemoryHex;
+import com.devmel.apps.mcuprogrammer.sections.Memory;
+import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
 import com.devmel.tools.IntelHex;
 
 public class DataArray {
@@ -20,7 +20,7 @@ public class DataArray {
 	public String filePath;
 	
 	//Mask
-	public final List<Memory> sections = new ArrayList<Memory>();
+	public final List<Object> sections = new ArrayList<Object>();
 	public boolean sectionsLock = false;
 	
 	//RAW Data Binary
@@ -38,10 +38,13 @@ public class DataArray {
 		//Search segment
 		int newSize = 0;
 		for (int i = 0; i < sections.size(); i++) {
-			Memory section = sections.get(i);
-			int s = section.startAddr+section.size;
-			if(newSize<s){
-				newSize = s;
+			Object section = sections.get(i);
+			if(section instanceof Memory){
+				Memory mem = (Memory) section;
+				int s = mem.startAddr+mem.size;
+				if(newSize<s){
+					newSize = s;
+				}
 			}
 		}
 		if(rawdata==null || newSize>rawdata.length){
@@ -132,26 +135,29 @@ public class DataArray {
 				IntelHex h = new IntelHex();
 				for (int i = 0; i < sections.size(); i++) {
 					//Build segments
-					Memory section = sections.get(i);
-					int start = section.startAddr;
-					//Trim start section
-					int j=0;
-					for(j=0;j<section.size;j++){
-						if(rawdata[j+start]!=defaultValue){
-							break;
-						}
-					}
-					start += j;
-					if(j<section.size){
-						//Trim end section
-						for(j=section.size-1-j;j>=0;j--){
+					Object section = sections.get(i);
+					if(section instanceof Memory){
+						Memory mem = (Memory) section;
+						int start = mem.startAddr;
+						//Trim start section
+						int j=0;
+						for(j=0;j<mem.size;j++){
 							if(rawdata[j+start]!=defaultValue){
 								break;
 							}
 						}
-						byte[] cpy = new byte[j+1];
-						System.arraycopy(rawdata, start, cpy, 0, cpy.length);
-						h.addSegment(start, cpy);
+						start += j;
+						if(j<mem.size){
+							//Trim end section
+							for(j=mem.size-1-j;j>=0;j--){
+								if(rawdata[j+start]!=defaultValue){
+									break;
+								}
+							}
+							byte[] cpy = new byte[j+1];
+							System.arraycopy(rawdata, start, cpy, 0, cpy.length);
+							h.addSegment(start, cpy);
+						}
 					}
 				}
 				h.exportFile(filePath);

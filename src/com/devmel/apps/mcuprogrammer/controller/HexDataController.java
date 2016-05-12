@@ -1,7 +1,7 @@
 package com.devmel.apps.mcuprogrammer.controller;
 
 import com.devmel.apps.mcuprogrammer.datas.DataArray;
-import com.devmel.apps.mcuprogrammer.memories.MemoryHex;
+import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
 import com.devmel.apps.mcuprogrammer.view.IHexView;
 
 public class HexDataController {
@@ -10,8 +10,8 @@ public class HexDataController {
 	private final IHexView hexView;
 	private boolean inProgress = false;
 	
-	public HexDataController(DataArray tabdata, MemoryHex section, IHexView hexView, MainController ethProgController){
-		this.mainController=ethProgController;
+	public HexDataController(DataArray tabdata, MemoryHex section, IHexView hexView, MainController mainController){
+		this.mainController=mainController;
 		this.section=section;
 		this.hexView=hexView;
 		hexView.setData(tabdata.rawdata, section.startAddr, section.size);

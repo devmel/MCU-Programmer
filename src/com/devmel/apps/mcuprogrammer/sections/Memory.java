@@ -1,4 +1,4 @@
-package com.devmel.apps.mcuprogrammer.memories;
+package com.devmel.apps.mcuprogrammer.sections;
 
 public abstract class Memory {
 	public String name;

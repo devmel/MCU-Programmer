@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import com.devmel.apps.mcuprogrammer.controller.MainController;
-import com.devmel.apps.mcuprogrammer.lang.Language;
+import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.view.swing.TargetToolsBar;
 import com.devmel.apps.mcuprogrammer.view.swing.TargetSelectionBar;
 import com.devmel.apps.mcuprogrammer.view.swing.DeviceSelectBar;
@@ -27,7 +27,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class MainView extends JFrame{
 	private static final long serialVersionUID = -7648450274854220447L;
-	private final FileNameExtensionFilter filetype = new FileNameExtensionFilter(Language.getString("MainView.0"), Language.getString("MainView.1"), Language.getString("MainView.2")); //$NON-NLS-2$ //$NON-NLS-3$
+	private final FileNameExtensionFilter filetype = new FileNameExtensionFilter(R.bundle.getString("MainView.0"), R.bundle.getString("MainView.1"), R.bundle.getString("MainView.2")); //$NON-NLS-2$ //$NON-NLS-3$
 	private MainController controller;
 	public JTabbedPane tabbedPane;
 	public JMenuItem mntmSave;
@@ -37,7 +37,7 @@ public class MainView extends JFrame{
 	public StatusBar statusBar;
 
 	public MainView(){
-		this.setTitle(Language.getString("MainView.3"));
+		this.setTitle(R.bundle.getString("MainView.3"));
 		this.setBounds(100, 100, 630, 640);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setResizable(false);
@@ -72,7 +72,7 @@ public class MainView extends JFrame{
 		JMenuBar menuBar = new JMenuBar();
 		this.setJMenuBar(menuBar);
 
-		JMenu mnFile = new JMenu(Language.getString("MainView.4"));
+		JMenu mnFile = new JMenu(R.bundle.getString("MainView.4"));
 		menuBar.add(mnFile);
 		mnFile.addMenuListener(new MenuListener() {
 			@Override
@@ -91,7 +91,7 @@ public class MainView extends JFrame{
 			}
 		});
 
-		JMenuItem mntmOpen = new JMenuItem(Language.getString("MainView.5"));
+		JMenuItem mntmOpen = new JMenuItem(R.bundle.getString("MainView.5"));
 		mnFile.add(mntmOpen);
 		mntmOpen.addActionListener(new ActionListener() {
 			@Override
@@ -105,7 +105,7 @@ public class MainView extends JFrame{
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
 
-		mntmSave = new JMenuItem(Language.getString("MainView.6"));
+		mntmSave = new JMenuItem(R.bundle.getString("MainView.6"));
 		mnFile.add(mntmSave);
 		mntmSave.addActionListener(new ActionListener() {
 			@Override
@@ -116,7 +116,7 @@ public class MainView extends JFrame{
 			}
 		});
 
-		JMenuItem mntmSaveAs = new JMenuItem(Language.getString("MainView.7"));
+		JMenuItem mntmSaveAs = new JMenuItem(R.bundle.getString("MainView.7"));
 		mnFile.add(mntmSaveAs);
 		mntmSaveAs.addActionListener(new ActionListener() {
 			@Override
@@ -130,7 +130,7 @@ public class MainView extends JFrame{
 		JSeparator separator_1 = new JSeparator();
 		mnFile.add(separator_1);
 
-		JMenuItem mntmExit = new JMenuItem(Language.getString("MainView.8"));
+		JMenuItem mntmExit = new JMenuItem(R.bundle.getString("MainView.8"));
 		mnFile.add(mntmExit);
 		mntmExit.addActionListener(new ActionListener() {
 			@Override

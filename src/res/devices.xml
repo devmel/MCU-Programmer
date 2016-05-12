@@ -2,10 +2,14 @@
 <devices>
 	<device>
 		<manufacturer>Arduino</manufacturer>
-		<name>Mega 328P (Uno, mini...)</name>
+		<name>Pro Mini</name>
 		<id>0x1e950f</id>
 		<programmer>STK500</programmer>
 		<programmer>AVRISP</programmer>
+		<section class="WiringDiagram">
+			<image>arduino.promini</image>
+			<voltage>3.3v</voltage>
+		</section>
 		<section class="HexWritePage">
 			<name>FLASH</name>
 			<start>0</start>
@@ -36,7 +40,10 @@
 		<id>0x1e9801</id>
 		<programmer>STK500v2</programmer>
 		<programmer>AVRISP</programmer>
-		<programmer>AVRJTAG</programmer>
+		<section class="WiringDiagram">
+			<image>arduino.mega2560</image>
+			<voltage>5v</voltage>
+		</section>
 		<section class="HexWritePage">
 			<name>FLASH</name>
 			<start>0</start>

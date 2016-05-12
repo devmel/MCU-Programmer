@@ -3,7 +3,7 @@ package com.devmel.apps.mcuprogrammer.view.swing;
 import javax.swing.JPanel;
 
 import com.devmel.apps.mcuprogrammer.controller.MainController;
-import com.devmel.apps.mcuprogrammer.lang.Language;
+import com.devmel.apps.mcuprogrammer.R;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -22,7 +22,7 @@ public class TargetToolsBar extends JPanel{
 	private final JLabel targetId;
 	
 	public TargetToolsBar() {
-		btnReadId = new JButton(Language.getString("TargetToolsBar.0")); //$NON-NLS-1$
+		btnReadId = new JButton(R.bundle.getString("TargetToolsBar.0"));
 		btnReadId.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 	        	if(controller!=null){
@@ -44,7 +44,7 @@ public class TargetToolsBar extends JPanel{
 		separator_3.setOrientation(SwingConstants.VERTICAL);
 		add(separator_3);
 		
-		btnEraseAll = new JButton(Language.getString("TargetToolsBar.1")); //$NON-NLS-1$
+		btnEraseAll = new JButton(R.bundle.getString("TargetToolsBar.1"));
 		btnEraseAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 	        	if(controller!=null){

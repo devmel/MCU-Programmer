@@ -3,7 +3,7 @@ package com.devmel.apps.mcuprogrammer.view.swing;
 import javax.swing.JPanel;
 
 import com.devmel.apps.mcuprogrammer.controller.HexDataController;
-import com.devmel.apps.mcuprogrammer.lang.Language;
+import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.view.IHexView;
 import com.jhe.hexed.JHexEditor;
 
@@ -48,7 +48,7 @@ public class HexView extends JPanel implements IHexView{
 		commandPanel.setBackground(Color.WHITE);
 		add(commandPanel, BorderLayout.NORTH);
 		
-		btnRead = new JButton(Language.getString("HexView.0")); //$NON-NLS-1$
+		btnRead = new JButton(R.bundle.getString("HexView.0"));
 		btnRead.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 	        	if(controller!=null){
@@ -58,7 +58,7 @@ public class HexView extends JPanel implements IHexView{
 		});
 		commandPanel.add(btnRead);
 		
-		btnWrite = new JButton(Language.getString("HexView.1")); //$NON-NLS-1$
+		btnWrite = new JButton(R.bundle.getString("HexView.1"));
 		commandPanel.add(btnWrite);
 		btnWrite.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -68,7 +68,7 @@ public class HexView extends JPanel implements IHexView{
 			}
 		});
 		
-		btnVerify = new JButton(Language.getString("HexView.2")); //$NON-NLS-1$
+		btnVerify = new JButton(R.bundle.getString("HexView.2"));
 		commandPanel.add(btnVerify);
 		btnVerify.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {

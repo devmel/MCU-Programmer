@@ -1,5 +1,6 @@
 package com.devmel.apps.mcuprogrammer.controller;
 
+import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -7,13 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.datas.DataArray;
 import com.devmel.apps.mcuprogrammer.datas.TargetsConfig;
-import com.devmel.apps.mcuprogrammer.lang.Language;
-import com.devmel.apps.mcuprogrammer.memories.Memory;
-import com.devmel.apps.mcuprogrammer.memories.MemoryHex;
+import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
+import com.devmel.apps.mcuprogrammer.sections.WiringDiagram;
 import com.devmel.apps.mcuprogrammer.view.swing.HexView;
 import com.devmel.apps.mcuprogrammer.view.swing.MainView;
+import com.devmel.apps.mcuprogrammer.view.swing.WiringDiagramView;
 import com.devmel.communication.nativesystem.Uart;
 import com.devmel.programming.IProgramming;
 import com.devmel.storage.IBase;
@@ -40,7 +42,7 @@ public class MainController {
 
 	
 	public MainController(IBase userPrefs, DataArray tabdata, TargetsConfig targetsConfig, MainView gui){
-		this.devices = new Node(userPrefs, Language.getString("MainController.0"));
+		this.devices = new Node(userPrefs, R.bundle.getString("MainController.0"));
 		this.tabdata=tabdata;
 		this.targetsConfig=targetsConfig;
 		this.gui=gui;
@@ -49,7 +51,7 @@ public class MainController {
 	public void initialize(){
 		String[] names = targetsConfig.manufacturerList();
 		String[] nnames = new String[names.length+1];
-		nnames[0] = Language.getString("MainController.1");
+		nnames[0] = R.bundle.getString("MainController.1");
 		for(int i=0;i<names.length;i++){
 			nnames[i+1]=names[i];
 		}
@@ -89,7 +91,7 @@ public class MainController {
 		deviceUnbuild(false);
 		deviceType = null;
 		deviceName = null;
-		if (name != null && !name.equals(Language.getString("MainController.2"))) {
+		if (name != null && !name.equals(R.bundle.getString("MainController.2"))) {
 			if(name.contains(" - ")){
 				String[] names = name.split(" - ");
 				if(names!=null && names.length>0){
@@ -118,6 +120,16 @@ public class MainController {
 					}
 				}
 			}
+			//Update port in sections
+			if(gui.tabbedPane != null){
+				for(int i = 0; i<gui.tabbedPane.getTabCount();i++){
+					Component c = gui.tabbedPane.getComponent(i);
+					if(c instanceof WiringDiagramView){
+						if(deviceType!=null)
+							((WiringDiagramView)c).setPortClass(deviceType.packageName);
+					}
+				}
+			}
 		}
 	}
 
@@ -136,7 +148,7 @@ public class MainController {
 		gui.deviceSelectBar.addIPDeviceDialog();
 	}
 	
-	public void addIPDeviceClick(final String name, final String localIP6, final String password) {
+	public void addIPDeviceClick(final String name, final String localIP6, final String password, final boolean gatewayEnabled) {
 		int err = 0;
 		if (this.devices.isChildExist(name)) {
 			err = -1;
@@ -153,6 +165,7 @@ public class MainController {
 					SimpleIPConfig device = new SimpleIPConfig(name);
 					device.setIp(ip);
 					device.setPassword(password);
+					device.setGateway(gatewayEnabled);
 					device.save(devices);
 				}
 				initializeDeviceList();
@@ -162,20 +175,24 @@ public class MainController {
 			}
 		}
 		if (err < 0) {
-			gui.deviceSelectBar.addIPDeviceDialog(err, name, localIP6, password);
+			gui.deviceSelectBar.addIPDeviceDialog(err, name, localIP6, password, gatewayEnabled);
 		}
 	}
 
 	public void deleteIPDeviceClick(final String name, final boolean confirm) {
 		if (confirm == true) {
-			this.devices.removeChild(name);
+			if(name.contains(" - ")){
+				String[] names = name.split(" - ");
+				if(names!=null && names.length>0){
+					this.devices.removeChild(names[0]);
+				}
+			}
 			initializeDeviceList();
 		} else {
 			gui.deviceSelectBar.removeDeviceConfirm(name);
 		}
 	}
 
-	
 	
 	/******************************** TARGET *********************************/
 	public void selectManufacturer(String manufacturer){
@@ -190,7 +207,7 @@ public class MainController {
 		String[] programmers = targetsConfig.programmers(target);
 		if(programmers!=null && programmers.length>0){
 			gui.targetSelectionBar.setProgrammerList(programmers);
-			Memory[] sections = targetsConfig.sections(target);
+			Object[] sections = targetsConfig.sections(target);
 			if(sections!=null){
 				tabdata.sections.clear();
 				for(int i=0;i<sections.length;i++){
@@ -203,11 +220,11 @@ public class MainController {
 			
 		}else{
 			gui.hideTargetTools();
-			gui.targetSelectionBar.setProgrammerList(new String[] {Language.getString("MainController.3")});
+			gui.targetSelectionBar.setProgrammerList(new String[] {R.bundle.getString("MainController.3")});
 			tabdata.sectionsLock = false;
 			//Change all section type
 			for (int i = 0; i < tabdata.sections.size(); i++) {
-				Memory section = tabdata.sections.get(i);
+				Object section = tabdata.sections.get(i);
 				if(section instanceof MemoryHex){
 					((MemoryHex)section).type=0;
 				}
@@ -224,6 +241,17 @@ public class MainController {
 			this.programmer=null;
 		}else{
 			this.programmer=programmer;
+		}
+		//Update programmer in sections
+		if(gui.tabbedPane != null){
+			for(int i = 0; i<gui.tabbedPane.getTabCount();i++){
+				Component c = gui.tabbedPane.getComponent(i);
+				if(c instanceof WiringDiagramView){
+					if(deviceType!=null)
+						((WiringDiagramView)c).setPortClass(deviceType.packageName);
+					((WiringDiagramView)c).setProgrammer(programmer);
+				}
+			}
 		}
 	}
 	
@@ -249,21 +277,21 @@ public class MainController {
 								if(program.open()){
 									gui.targetSelectionBar.setOpened(true);
 								}else{
-									status = (Language.getString("MainController.5"));
+									status = (R.bundle.getString("MainController.5"));
 								}
 							} catch (IOException e) {
 								status = deviceException(e);
 							}
 						}else if(programmer!=null){
-							status = (Language.getString("MainController.4"));
+							status = (R.bundle.getString("MainController.4"));
 						}else{
-							status = (Language.getString("MainController.6"));
+							status = (R.bundle.getString("MainController.6"));
 						}
 					}else{
 						deviceUnbuild(true);
 					}
 				}else{
-					status = (Language.getString("MainController.7"));
+					status = (R.bundle.getString("MainController.7"));
 				}
 				stopCommunication(status);
 			}
@@ -283,13 +311,13 @@ public class MainController {
 						if(targetID!=null){
 							gui.targetToolsBar.setDeviceID(Hexadecimal.fromBytes(targetID));
 						}else{
-							status = Language.getString("MainController.8");
+							status = R.bundle.getString("MainController.8");
 						}
 					}catch(IOException e) {
 						status = deviceException(e);
 					}
 				}else{
-					status = Language.getString("MainController.9");
+					status = R.bundle.getString("MainController.9");
 				}
 				stopCommunication(status);
 			}
@@ -304,15 +332,15 @@ public class MainController {
 				if(program!=null && program.isOpen()==true){
 					try{
 						if(program.erase(null)){	//Erase All
-							status = Language.getString("MainController.10");
+							status = R.bundle.getString("MainController.10");
 						}else{
-							status = Language.getString("MainController.11");
+							status = R.bundle.getString("MainController.11");
 						}
 					}catch(IOException e) {
 						status = deviceException(e);
 					}
 				}else{
-					status = Language.getString("MainController.12");
+					status = R.bundle.getString("MainController.12");
 				}
 				stopCommunication(status);
 			}
@@ -328,13 +356,13 @@ public class MainController {
 				if(program!=null && program.isOpen()==true){
 					try{
 						if(memory.read(gui.statusBar, program, tabdata.rawdata, 0)<0){
-							status = Language.getString("MainController.13")+Integer.toHexString(memory.progAddress).toUpperCase();
+							status = R.bundle.getString("MainController.13")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}
 					}catch(IOException e) {
 						status = deviceException(e);
 					}
 				}else{
-					status = Language.getString("MainController.14");
+					status = R.bundle.getString("MainController.14");
 				}
 				stopCommunication(status);
 			}
@@ -350,13 +378,13 @@ public class MainController {
 				if(program!=null && program.isOpen()==true){
 					try{
 						if(memory.write(gui.statusBar, program, tabdata.rawdata, 0)<0){
-							status = Language.getString("MainController.15")+Integer.toHexString(memory.progAddress).toUpperCase();
+							status = R.bundle.getString("MainController.15")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}
 					}catch(IOException e) {
 						status = deviceException(e);
 					}
 				}else{
-					status = Language.getString("MainController.16");
+					status = R.bundle.getString("MainController.16");
 				}
 				stopCommunication(status);
 			}
@@ -373,17 +401,17 @@ public class MainController {
 					try{
 						int verif = memory.verify(gui.statusBar, program, tabdata.rawdata, 0);
 						if(verif<-1){
-							status = Language.getString("MainController.17")+Integer.toHexString(memory.progAddress).toUpperCase();
+							status = R.bundle.getString("MainController.17")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}else if(verif==-1){
-							status = Language.getString("MainController.18");
+							status = R.bundle.getString("MainController.18");
 						}else{
-							status = Language.getString("MainController.19")+Integer.toHexString(verif).toUpperCase();
+							status = R.bundle.getString("MainController.19")+Integer.toHexString(verif).toUpperCase();
 						}
 					}catch(IOException e) {
 						status = deviceException(e);
 					}
 				}else{
-					status = Language.getString("MainController.20");
+					status = R.bundle.getString("MainController.20");
 				}
 				stopCommunication(status);
 			}
@@ -413,14 +441,14 @@ public class MainController {
 	public void openFile(File file){
 		if(tabdata.openFile(file)==0){
 			reloadSections();
-			gui.setTitle(Language.getString("MainController.21") + tabdata.filePath);
+			gui.setTitle(R.bundle.getString("MainController.21") + tabdata.filePath);
 		}
 	}
 	public void saveFile(File file){
 		if(file!=null){
 			String filePath = file.getAbsolutePath();
 			if(tabdata.saveFile(filePath)==0){
-				gui.setTitle(Language.getString("MainController.22") + tabdata.filePath);
+				gui.setTitle(R.bundle.getString("MainController.22") + tabdata.filePath);
 			}
 		}
 	}
@@ -437,17 +465,22 @@ public class MainController {
 		hexControllers.clear();
 		gui.tabbedPane.removeAll();
 		for (int i = 0; i < tabdata.sections.size(); i++) {
-			Memory section = tabdata.sections.get(i);
-			if(section instanceof MemoryHex){
+			Object section = tabdata.sections.get(i);
+			if(section instanceof WiringDiagram){
+				WiringDiagramView view = new WiringDiagramView(((WiringDiagram)section).imageName, ((WiringDiagram)section).voltage);
+				gui.tabbedPane.addTab(R.bundle.getString("MainController.25"), null, view, R.bundle.getString("MainController.23"));
+			}
+			else if(section instanceof MemoryHex){
+				MemoryHex mem = (MemoryHex) section;
 				HexView view =  new HexView();
-				HexDataController hexController = new HexDataController(tabdata, (MemoryHex) section, view, this);
+				HexDataController hexController = new HexDataController(tabdata, mem, view, this);
 				view.setController(hexController);
 				hexControllers.add(hexController);
-				gui.tabbedPane.addTab(section.name, null, view, Language.getString("MainController.23"));
+				gui.tabbedPane.addTab(mem.name, null, view, R.bundle.getString("MainController.23"));
 			}
 		}
 	}
-	
+		
 	public void startCommunication(){
 		gui.targetToolsBar.setEnabled(false);
 		gui.tabbedPane.setEnabled(false);
@@ -471,7 +504,7 @@ public class MainController {
 	
 	private void setStatus(String status, boolean progress){
 		if(status==null || status.length()==0){
-			status = Language.getString("MainController.24");
+			status = R.bundle.getString("MainController.24");
 		}
 		gui.statusBar.setStatus(status);
 		if(progress==true){

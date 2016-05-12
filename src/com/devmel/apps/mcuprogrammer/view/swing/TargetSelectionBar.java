@@ -3,7 +3,7 @@ package com.devmel.apps.mcuprogrammer.view.swing;
 import javax.swing.JPanel;
 
 import com.devmel.apps.mcuprogrammer.controller.MainController;
-import com.devmel.apps.mcuprogrammer.lang.Language;
+import com.devmel.apps.mcuprogrammer.R;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,7 +35,7 @@ public class TargetSelectionBar extends JPanel{
 		programmerSelect.addItemListener(new ListProgrammer());
 		add(programmerSelect);
 		
-		btnOpen = new JButton(Language.getString("TargetSelectionBar.0")); //$NON-NLS-1$
+		btnOpen = new JButton(R.bundle.getString("TargetSelectionBar.0")); //$NON-NLS-1$
 		btnOpen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 	        	if(controller!=null){
@@ -62,9 +62,9 @@ public class TargetSelectionBar extends JPanel{
 	
 	public void setOpened(boolean opened) {
 		if(opened==true){
-			btnOpen.setText(Language.getString("TargetSelectionBar.1")); //$NON-NLS-1$
+			btnOpen.setText(R.bundle.getString("TargetSelectionBar.1")); //$NON-NLS-1$
 		}else{
-			btnOpen.setText(Language.getString("TargetSelectionBar.2")); //$NON-NLS-1$
+			btnOpen.setText(R.bundle.getString("TargetSelectionBar.2")); //$NON-NLS-1$
 		}
 	}
 

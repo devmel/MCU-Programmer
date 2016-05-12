@@ -4,7 +4,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JLabel;
 
-import com.devmel.apps.mcuprogrammer.lang.Language;
+import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.view.IStatus;
 
 public class StatusBar extends JPanel implements IStatus{
@@ -15,7 +15,7 @@ public class StatusBar extends JPanel implements IStatus{
 	public StatusBar() {
 		progressBar = new JProgressBar();
 		add(progressBar);
-		lblStatus = new JLabel(Language.getString("StatusBar.0")); //$NON-NLS-1$
+		lblStatus = new JLabel(R.bundle.getString("StatusBar.0")); //$NON-NLS-1$
 		add(lblStatus);
 	}
 	
