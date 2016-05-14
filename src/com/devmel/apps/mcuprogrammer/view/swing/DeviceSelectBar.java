@@ -7,6 +7,8 @@ import com.devmel.apps.mcuprogrammer.R;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -25,8 +27,27 @@ public class DeviceSelectBar extends JPanel{
 	
 	public DeviceSelectBar() {
 		deviceSelect = new JComboBox<String>();
-		deviceSelect.setPrototypeDisplayValue(R.bundle.getString("DeviceSelectBar.0"));
-		deviceSelect.setToolTipText((String) null);
+		deviceSelect.setPrototypeDisplayValue("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+		deviceSelect.addMouseListener(new MouseListener(){
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				if(controller!=null){
+					controller.reloadDeviceList();
+				}
+			}
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+			}
+			@Override
+			public void mouseExited(MouseEvent arg0) {
+			}
+			@Override
+			public void mousePressed(MouseEvent arg0) {
+			}
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+			}
+		});
 		deviceSelect.addItemListener(new ItemListener(){
 			@Override
 			public void itemStateChanged(ItemEvent e) {
@@ -78,12 +99,14 @@ public class DeviceSelectBar extends JPanel{
 	}
 
 	public void setListDevices(String[] list) {
+		Object selected = deviceSelect.getSelectedItem();
 		deviceSelect.removeAllItems();
 		if(list!=null){
 			for (String item : list) {
 				deviceSelect.addItem(item);
 			}
 		}
+		deviceSelect.setSelectedItem(selected);
 		this.repaint();
 	}
 	

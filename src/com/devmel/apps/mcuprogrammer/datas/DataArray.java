@@ -15,6 +15,9 @@ import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
 import com.devmel.tools.IntelHex;
 
 public class DataArray {
+	public String voltage = null;
+	public byte[] defaultId = null;
+	
 	private byte defaultValue = (byte) 0xFF;
 
 	public String filePath;
@@ -107,10 +110,10 @@ public class DataArray {
 				this.filePath = file.getAbsolutePath();
 			}
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 			ret = -1;
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 			ret = -10;
 		}
 		return ret;

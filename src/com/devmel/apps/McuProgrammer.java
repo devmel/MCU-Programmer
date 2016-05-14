@@ -82,7 +82,7 @@ public class McuProgrammer {
 			}
 		}
 		DataArray tabData = new DataArray();
-		TargetsConfig devicesConfig = new TargetsConfig();
+		final TargetsConfig devicesConfig = new TargetsConfig();
 		//Start controller
 		mainView = new MainView();
 		final MainController controller = new MainController(userPrefs, tabData, devicesConfig, mainView);

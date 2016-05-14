@@ -1,6 +1,7 @@
 package com.devmel.apps.mcuprogrammer.datas;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,19 +16,36 @@ import org.w3c.dom.NodeList;
 
 import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
 import com.devmel.apps.mcuprogrammer.sections.MemoryHexWriteSector;
-import com.devmel.apps.mcuprogrammer.sections.WiringDiagram;
+import com.devmel.tools.Hexadecimal;
 
 public class TargetsConfig {
+	private URL resources;
 	private Document doc;
 	
-	public TargetsConfig(){
+	public TargetsConfig(){}
+	
+	public boolean loadResource(URL resources){
+		boolean valid = false;
+		InputStream xml = null;
 		try {
-			InputStream xml = TargetsConfig.class.getResourceAsStream("/res/devices.xml");
+			xml = new URL(resources, "devices.xml").openStream();
 			DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			doc = dBuilder.parse(xml);
+			valid = true;
+			this.resources=resources;
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			doc = null;
+		}finally{
+			try {
+				xml.close();
+			} catch (Exception e) {
+			}
 		}
+		return valid;
+	}
+	
+	public URL getResources(){
+		return resources;
 	}
 
 	public Object[] sections(String deviceName){
@@ -41,19 +59,8 @@ public class TargetsConfig {
 					if(nNode.getNodeName().equalsIgnoreCase("section")){
 						Element eElement = (Element) nNode;
 						String className = eElement.getAttributeNode("class").getNodeValue();
-						//Wiring
-						if(className.equals("WiringDiagram")){
-							String imageName = null;
-							String voltage = null;
-							try {
-								imageName = eElement.getElementsByTagName("image").item(0).getTextContent();
-								voltage = eElement.getElementsByTagName("voltage").item(0).getTextContent();
-							} catch (Exception e) {}
-							if(imageName != null && voltage != null)
-								sectionsList.add(new WiringDiagram(imageName, voltage));
-						}
 						//Hex class
-						else if(className.startsWith("Hex")){
+						if(className.startsWith("Hex")){
 							int readStartInt = 0;
 							int writeStartInt = 0;
 							
@@ -67,11 +74,7 @@ public class TargetsConfig {
 							if(b!=null && b.item(0)!=null){
 								String blank = b.item(0).getTextContent();
 								if(blank!=null && blank.startsWith("0x")){
-									int tab = (blank.length()/2)-1;
-									blankArray = new byte[tab];
-									for(int z=0;z<tab;z++){
-										blankArray[z] = (byte) (Integer.parseInt(blank.substring(z*2+2, (z*2)+4),16) & 0xff);
-									}
+									blankArray = Hexadecimal.toBytes(blank.substring(2));
 								}
 							}
 							
@@ -100,7 +103,7 @@ public class TargetsConfig {
 						}
 					}
 				}catch(Exception e){
-					e.printStackTrace();
+//					e.printStackTrace();
 				}
 			}
 		}
@@ -111,17 +114,18 @@ public class TargetsConfig {
 
 	public String[] manufacturerList(){
 		Set<String> manufacturerList = new HashSet<String>();
-		
-		NodeList nList = doc.getElementsByTagName("device");
-		for (int i = 0; i < nList.getLength(); i++) {
-			try{
-				Node nNode = nList.item(i);
-				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-					Element eElement = (Element) nNode;
-					manufacturerList.add(eElement.getElementsByTagName("manufacturer").item(0).getTextContent());
+		if(doc != null){
+			NodeList nList = doc.getElementsByTagName("device");
+			for (int i = 0; i < nList.getLength(); i++) {
+				try{
+					Node nNode = nList.item(i);
+					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+						Element eElement = (Element) nNode;
+						manufacturerList.add(eElement.getElementsByTagName("manufacturer").item(0).getTextContent());
+					}
+				}catch(Exception e){
+	//				e.printStackTrace();
 				}
-			}catch(Exception e){
-				e.printStackTrace();
 			}
 		}
 		String[] names = new String[manufacturerList.size()];
@@ -131,20 +135,21 @@ public class TargetsConfig {
 
 	public String[] nameList(String manufacturer){
 		Set<String> nameList = new HashSet<String>();
-		NodeList nList = doc.getElementsByTagName("device");
-		
-		for (int i = 0; i < nList.getLength(); i++) {
-			try{
-				Node nNode = nList.item(i);
-				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-					Element eElement = (Element) nNode;
-					String mnf = eElement.getElementsByTagName("manufacturer").item(0).getTextContent();
-					if(manufacturer==null || manufacturer.equalsIgnoreCase(mnf)){
-						nameList.add(eElement.getElementsByTagName("name").item(0).getTextContent());
+		if(doc != null){
+			NodeList nList = doc.getElementsByTagName("device");
+			for (int i = 0; i < nList.getLength(); i++) {
+				try{
+					Node nNode = nList.item(i);
+					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+						Element eElement = (Element) nNode;
+						String mnf = eElement.getElementsByTagName("manufacturer").item(0).getTextContent();
+						if(manufacturer==null || manufacturer.equalsIgnoreCase(mnf)){
+							nameList.add(eElement.getElementsByTagName("name").item(0).getTextContent());
+						}
 					}
+				}catch(Exception e){
+	//				e.printStackTrace();
 				}
-			}catch(Exception e){
-				e.printStackTrace();
 			}
 		}
 		String[] names = new String[nameList.size()];
@@ -154,7 +159,6 @@ public class TargetsConfig {
 	
 	public String[] programmers(String deviceName){
 		ArrayList<String> programmers = new ArrayList<String>();
-		
 		Element device = getDevice(deviceName);
 		if(device!=null){
 			NodeList nList = device.getChildNodes();
@@ -164,10 +168,10 @@ public class TargetsConfig {
 					Node nNode = nList.item(i);
 					if(nNode.getNodeName().equalsIgnoreCase("programmer")){
 						Element eElement = (Element) nNode;
-						programmers.add(eElement.getChildNodes().item(0).getTextContent());
+						programmers.add(eElement.getElementsByTagName("name").item(0).getTextContent());
 					}
 				}catch(Exception e){
-					e.printStackTrace();
+//					e.printStackTrace();
 				}
 			}
 		}		
@@ -176,21 +180,66 @@ public class TargetsConfig {
 		return names;
 	}
 	
+	public String getVoltage(String deviceName){
+		String voltage = null;
+		Element device = getDevice(deviceName);
+		if(device!=null){
+			NodeList nList = device.getChildNodes();
+			
+			for (int i = 0; i < nList.getLength(); i++) {
+				try{
+					Node nNode = nList.item(i);
+					if(nNode.getNodeName().equalsIgnoreCase("voltage")){
+						Element eElement = (Element) nNode;
+						voltage = eElement.getChildNodes().item(0).getTextContent();
+					}
+				}catch(Exception e){
+//					e.printStackTrace();
+				}
+			}
+		}		
+		return voltage;
+	}
+
+	public byte[] getId(String deviceName){
+		byte[] id = null;
+		Element device = getDevice(deviceName);
+		if(device!=null){
+			NodeList nList = device.getChildNodes();
+			
+			for (int i = 0; i < nList.getLength(); i++) {
+				try{
+					Node nNode = nList.item(i);
+					if(nNode.getNodeName().equalsIgnoreCase("id")){
+						Element eElement = (Element) nNode;
+						String val = eElement.getChildNodes().item(0).getTextContent();
+						id = Hexadecimal.toBytes(val.substring(2));
+					}
+				}catch(Exception e){
+//					e.printStackTrace();
+				}
+			}
+		}		
+		return id;
+	}
+
 	private Element getDevice(String deviceName){
 		Element eElement = null;
-		NodeList nList = doc.getElementsByTagName("device");
-		for (int i = 0; i < nList.getLength(); i++) {
-			try{
-				Node nNode = nList.item(i);
-				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-					eElement = (Element) nNode;
-					if(eElement.getElementsByTagName("name").item(0).getTextContent().equalsIgnoreCase(deviceName)){
-						break;
+		if(doc != null){
+			NodeList nList = doc.getElementsByTagName("device");
+			for (int i = 0; i < nList.getLength(); i++) {
+				try{
+					Node nNode = nList.item(i);
+					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+						eElement = (Element) nNode;
+						if(eElement.getElementsByTagName("name").item(0).getTextContent().equalsIgnoreCase(deviceName)){
+							break;
+						}
+						eElement = null;
 					}
-					eElement = null;
+				}catch(Exception e){
+	//				e.printStackTrace();
 				}
-			}catch(Exception e){
-				e.printStackTrace();
 			}
 		}
 		return eElement;

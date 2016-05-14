@@ -27,7 +27,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class MainView extends JFrame{
 	private static final long serialVersionUID = -7648450274854220447L;
-	private final FileNameExtensionFilter filetype = new FileNameExtensionFilter(R.bundle.getString("MainView.0"), R.bundle.getString("MainView.1"), R.bundle.getString("MainView.2")); //$NON-NLS-2$ //$NON-NLS-3$
+	private final FileNameExtensionFilter filetype = new FileNameExtensionFilter("*.hex, *.bin", "hex", "bin");
+	private final FileNameExtensionFilter filetypeTarget = new FileNameExtensionFilter("*.zip, *.jar", "zip", "jar");
 	private MainController controller;
 	public JTabbedPane tabbedPane;
 	public JMenuItem mntmSave;
@@ -141,6 +142,20 @@ public class MainView extends JFrame{
 			}
 		});
 
+		JMenu mnSettings = new JMenu(R.bundle.getString("MainView.9"));
+		menuBar.add(mnSettings);
+		
+		JMenuItem menuTargetDatabase = new JMenuItem(R.bundle.getString("MainView.10"));
+		mnSettings.add(menuTargetDatabase);
+		menuTargetDatabase.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if(controller!=null){
+					controller.targetDatabaseClick();
+				}
+			}
+		});
+		
 		statusBar = new StatusBar();
 		this.getContentPane().add(statusBar, BorderLayout.SOUTH);
 	}
@@ -168,6 +183,18 @@ public class MainView extends JFrame{
 		targetToolsBar.setVisible(false);
 	}
 	
+	public void showTargetDatabaseDialog(String defaultFilePath){
+		JFileChooser chooser = new JFileChooser();
+		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		chooser.addChoosableFileFilter(filetypeTarget);
+		if(defaultFilePath!=null){
+			chooser.setCurrentDirectory(new File(defaultFilePath));
+		}
+		chooser.showOpenDialog(null);
+		if(controller!=null){
+			controller.openTargetDatabaseFile(chooser.getSelectedFile());
+		}
+	}
 	public void showOpenDialog(String defaultFilePath){
 		JFileChooser chooser = new JFileChooser();
 		chooser.addChoosableFileFilter(filetype);

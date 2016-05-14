@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -12,7 +13,6 @@ import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.datas.DataArray;
 import com.devmel.apps.mcuprogrammer.datas.TargetsConfig;
 import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
-import com.devmel.apps.mcuprogrammer.sections.WiringDiagram;
 import com.devmel.apps.mcuprogrammer.view.swing.HexView;
 import com.devmel.apps.mcuprogrammer.view.swing.MainView;
 import com.devmel.apps.mcuprogrammer.view.swing.WiringDiagramView;
@@ -24,8 +24,11 @@ import com.devmel.storage.SimpleIPConfig;
 import com.devmel.tools.Hexadecimal;
 import com.devmel.tools.IPAddress;
 
-public class MainController {	
+public class MainController {
+	private final static URL defaultTargetfiles = MainController.class.getResource("/targets/");
 	private final List<HexDataController> hexControllers = new ArrayList<HexDataController>();
+	private final WiringDiagramView wiringView;
+	private final IBase baseStorage;
 	private final Node devices;
 	private final DataArray tabdata;
 	private final TargetsConfig targetsConfig;
@@ -40,28 +43,23 @@ public class MainController {
 	private String programmer;
 	private IProgramming program;
 
-	
 	public MainController(IBase userPrefs, DataArray tabdata, TargetsConfig targetsConfig, MainView gui){
-		this.devices = new Node(userPrefs, R.bundle.getString("MainController.0"));
+		this.wiringView = new WiringDiagramView(targetsConfig);
+		this.baseStorage = userPrefs;
+		this.devices = new Node(this.baseStorage, "Linkbus");
 		this.tabdata=tabdata;
 		this.targetsConfig=targetsConfig;
 		this.gui=gui;
 	}
 	
 	public void initialize(){
-		String[] names = targetsConfig.manufacturerList();
-		String[] nnames = new String[names.length+1];
-		nnames[0] = R.bundle.getString("MainController.1");
-		for(int i=0;i<names.length;i++){
-			nnames[i+1]=names[i];
-		}
-		gui.targetSelectionBar.setManufacturerList(nnames);
-		selectManufacturer(gui.targetSelectionBar.getManufacturer());
+		reloadResourcesTarget();
 		gui.statusBar.stopProgress();
 		gui.hideTargetTools();
-		initializeDeviceList();
+		reloadDeviceList();
 	}
-	public void initializeDeviceList(){
+	
+	public void reloadDeviceList(){
 		Vector<String> list = new Vector<String>();
 		String[] sysDeviceList = Uart.list();
 		if(sysDeviceList!=null){
@@ -121,15 +119,8 @@ public class MainController {
 				}
 			}
 			//Update port in sections
-			if(gui.tabbedPane != null){
-				for(int i = 0; i<gui.tabbedPane.getTabCount();i++){
-					Component c = gui.tabbedPane.getComponent(i);
-					if(c instanceof WiringDiagramView){
-						if(deviceType!=null)
-							((WiringDiagramView)c).setPortClass(deviceType.packageName);
-					}
-				}
-			}
+			wiringView.setPortClass(deviceType.packageName);
+			updateWiringView();
 		}
 	}
 
@@ -168,7 +159,7 @@ public class MainController {
 					device.setGateway(gatewayEnabled);
 					device.save(devices);
 				}
-				initializeDeviceList();
+				reloadDeviceList();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 				err = -5;
@@ -187,7 +178,7 @@ public class MainController {
 					this.devices.removeChild(names[0]);
 				}
 			}
-			initializeDeviceList();
+			reloadDeviceList();
 		} else {
 			gui.deviceSelectBar.removeDeviceConfirm(name);
 		}
@@ -199,10 +190,17 @@ public class MainController {
 		String[] names = targetsConfig.nameList(manufacturer);
 		gui.targetSelectionBar.setDeviceList(names);
 		selectTarget(gui.targetSelectionBar.getDevice());
+		wiringView.setManufacturer(manufacturer);
+		updateWiringView();
 	}
 	
 	public void selectTarget(String target){
 		deviceUnbuild(false);
+		//Get defaultId and voltage
+		tabdata.defaultId = targetsConfig.getId(target);
+		tabdata.voltage = targetsConfig.getVoltage(target);
+		wiringView.setTarget(target);
+		wiringView.setVoltage(tabdata.voltage);
 		//Get config
 		String[] programmers = targetsConfig.programmers(target);
 		if(programmers!=null && programmers.length>0){
@@ -217,7 +215,6 @@ public class MainController {
 				tabdata.sectionsCalculation();
 				gui.showTagetTools();
 			}
-			
 		}else{
 			gui.hideTargetTools();
 			gui.targetSelectionBar.setProgrammerList(new String[] {R.bundle.getString("MainController.3")});
@@ -243,16 +240,8 @@ public class MainController {
 			this.programmer=programmer;
 		}
 		//Update programmer in sections
-		if(gui.tabbedPane != null){
-			for(int i = 0; i<gui.tabbedPane.getTabCount();i++){
-				Component c = gui.tabbedPane.getComponent(i);
-				if(c instanceof WiringDiagramView){
-					if(deviceType!=null)
-						((WiringDiagramView)c).setPortClass(deviceType.packageName);
-					((WiringDiagramView)c).setProgrammer(programmer);
-				}
-			}
-		}
+		wiringView.setProgrammer(programmer);
+		updateWiringView();
 	}
 	
 	
@@ -457,26 +446,81 @@ public class MainController {
 		deviceUnbuild(true);
 		System.exit(0);
 	}
-
 	
+	public void targetDatabaseClick(){
+		gui.showTargetDatabaseDialog("");
+	}
+	
+	public void openTargetDatabaseFile(File file){
+		String uri = null;
+		if(file != null){
+			uri = file.toURI().toString();
+			if(uri.endsWith(".zip") || uri.endsWith(".jar")){
+				uri = "jar:"+uri+"!/";
+			}
+			baseStorage.saveString("mcuprog.targetfiles", uri);
+			reloadResourcesTarget();
+		}
+	}
+	
+	private void reloadResourcesTarget(){
+		boolean resourcesLoaded = false;
+		try {
+			URL resources = new URL(baseStorage.getString("mcuprog.targetfiles"));
+			resourcesLoaded = targetsConfig.loadResource(resources);
+		} catch (Exception e) {}
+		if(resourcesLoaded == false){
+			targetsConfig.loadResource(defaultTargetfiles);
+		}
+		String[] names = targetsConfig.manufacturerList();
+		String[] nnames = new String[names.length+1];
+		nnames[0] = R.bundle.getString("MainController.1");
+		for(int i=0;i<names.length;i++){
+			nnames[i+1]=names[i];
+		}
+		gui.targetSelectionBar.setManufacturerList(nnames);
+		selectManufacturer(gui.targetSelectionBar.getManufacturer());
+	}
+
 	private void reloadSections(){
 		//Clear controllers
 		stopCommunication();
 		hexControllers.clear();
 		gui.tabbedPane.removeAll();
+		//Load sections
 		for (int i = 0; i < tabdata.sections.size(); i++) {
 			Object section = tabdata.sections.get(i);
-			if(section instanceof WiringDiagram){
-				WiringDiagramView view = new WiringDiagramView(((WiringDiagram)section).imageName, ((WiringDiagram)section).voltage);
-				gui.tabbedPane.addTab(R.bundle.getString("MainController.25"), null, view, R.bundle.getString("MainController.23"));
-			}
-			else if(section instanceof MemoryHex){
+			if(section instanceof MemoryHex){
 				MemoryHex mem = (MemoryHex) section;
 				HexView view =  new HexView();
 				HexDataController hexController = new HexDataController(tabdata, mem, view, this);
 				view.setController(hexController);
 				hexControllers.add(hexController);
 				gui.tabbedPane.addTab(mem.name, null, view, R.bundle.getString("MainController.23"));
+			}
+		}
+	}
+	
+	private void updateWiringView(){
+		if(wiringView.isReady()){
+			if(gui.tabbedPane != null){
+				gui.tabbedPane.insertTab(R.bundle.getString("MainController.25"), null, wiringView, R.bundle.getString("MainController.23"), 0);
+				boolean c = wiringView.isChanged();
+				if(program!=null){
+					c=!program.isOpen();
+				}
+				if(c == true){
+					gui.tabbedPane.setSelectedIndex(0);
+				}
+			}
+		}else{
+			if(gui.tabbedPane != null){
+				for(int i = 0; i<gui.tabbedPane.getTabCount();i++){
+					Component c = gui.tabbedPane.getComponent(i);
+					if(c instanceof WiringDiagramView){
+						gui.tabbedPane.remove(c);
+					}
+				}
 			}
 		}
 	}
