@@ -106,7 +106,9 @@ public class DeviceSelectBar extends JPanel{
 				deviceSelect.addItem(item);
 			}
 		}
-		deviceSelect.setSelectedItem(selected);
+		if(selected != null){
+			deviceSelect.setSelectedItem(selected);
+		}
 		this.repaint();
 	}
 	

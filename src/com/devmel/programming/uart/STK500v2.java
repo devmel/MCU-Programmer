@@ -100,18 +100,18 @@ public class STK500v2 implements IProgramming{
 	public byte[] read(String memoryName, int addr, int size) throws IOException {
 		byte[] ret = new byte[0];
 		if(memoryName!=null){
-			if(memoryName.equals(MEMORY_DEVID)){
+			if(memoryName.equals(MEMORY_DEVID) || memoryName.startsWith(MEMORY_DEVID+"-")){
 				ret = new byte[3];
 				ret[0] = commandReadSignature(0);
 				ret[1] = commandReadSignature(1);
 				ret[2] = commandReadSignature(2);
-			}else if(memoryName.equals(MEMORY_FLASH)){
+			}else if(memoryName.equals(MEMORY_FLASH) || memoryName.startsWith(MEMORY_FLASH+"-")){
 				commandLoadAddress((addr>>1)&0xffffff);
 				ret = commandRead(size, false);
-			}else if(memoryName.equals(MEMORY_EEPROM)){
+			}else if(memoryName.equals(MEMORY_EEPROM) || memoryName.startsWith(MEMORY_EEPROM+"-")){
 				commandLoadAddress((addr>>1)&0xffffff);
 				ret = commandRead(size, true);
-			}else if(memoryName.equals(MEMORY_FUSES)){
+			}else if(memoryName.equals(MEMORY_FUSES) || memoryName.startsWith(MEMORY_FUSES+"-")){
 				byte[] fuse = new byte[5];
 				fuse[0] = commandReadFuse(0);
 				fuse[1] = commandReadFuse(1);
@@ -133,10 +133,10 @@ public class STK500v2 implements IProgramming{
 	public boolean writeSector(String memoryName, int addr, byte[] data) throws IOException {
 		boolean ret = false;
 		if(memoryName!=null && data!=null){
-			if(memoryName.equals(MEMORY_FLASH)){
+			if(memoryName.equals(MEMORY_FLASH) || memoryName.startsWith(MEMORY_FLASH+"-")){
 				commandLoadAddress((addr>>1)&0xffffff);
 				ret = commandWrite(data, false);
-			}else if(memoryName.equals(MEMORY_EEPROM)){
+			}else if(memoryName.equals(MEMORY_EEPROM) || memoryName.startsWith(MEMORY_EEPROM+"-")){
 				commandLoadAddress(addr);
 				ret = commandWrite(data, true);
 			}

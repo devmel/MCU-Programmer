@@ -1,13 +1,48 @@
 <?xml version="1.0"?>
 <devices>
 	<device>
+		<manufacturer>Digistump</manufacturer>
+		<name>Digispark</name>
+		<id>0x1e930b</id>
+		<voltage>5</voltage>
+		<programmer>
+			<name>AVRISP</name>
+		</programmer>
+		<programmer>
+			<name>AVRHVSP</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0</start>
+			<size>0x2000</size>
+			<pagesize>64</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+		<section class="HexWritePage">
+			<name>EEPROM</name>
+			<start>0x2000</start>
+			<size>0x200</size>
+			<pagesize>4</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+		<section class="Hex">
+			<name>FUSES</name>
+			<start>0x2200</start>
+			<blank>0xe1ddfeffff</blank>
+			<size>5</size>
+			<type>2</type>
+		</section>
+	</device>
+    <device>
 		<manufacturer>Arduino</manufacturer>
 		<name>Uno</name>
 		<id>0x1e950f</id>
 		<voltage>5</voltage>
 		<programmer>
-		    <name>STK500</name>
-	    </programmer>
+			<name>STK500</name>
+		</programmer>
 		<programmer>
 			<name>AVRISP</name>
 		</programmer>
@@ -30,8 +65,8 @@
 		<section class="Hex">
 			<name>FUSES</name>
 			<start>0x8400</start>
-			<blank>0x62d9ffff</blank>
-			<size>4</size>
+			<blank>0x62d9ffffff</blank>
+			<size>5</size>
 			<type>2</type>
 		</section>
 	</device>
@@ -41,8 +76,8 @@
 		<id>0x1e950f</id>
 		<voltage>3.3</voltage>
 		<programmer>
-		    <name>STK500</name>
-	    </programmer>
+			<name>STK500</name>
+		</programmer>
 		<programmer>
 			<name>AVRISP</name>
 		</programmer>
@@ -65,8 +100,8 @@
 		<section class="Hex">
 			<name>FUSES</name>
 			<start>0x8400</start>
-			<blank>0x62d9ffff</blank>
-			<size>4</size>
+			<blank>0x62d9ffffff</blank>
+			<size>5</size>
 			<type>2</type>
 		</section>
 	</device>
@@ -76,8 +111,8 @@
 		<id>0x1e9801</id>
 		<voltage>5</voltage>
 		<programmer>
-		    <name>STK500v2</name>
-	    </programmer>
+			<name>STK500v2</name>
+		</programmer>
 		<programmer>
 			<name>AVRISP</name>
 		</programmer>
@@ -105,14 +140,17 @@
 	</device>
 	<device>
 		<manufacturer>Arduino</manufacturer>
-		<name>Micro</name>
+		<name>Leonardo</name>
 		<id>0x1e9587</id>
 		<voltage>5</voltage>
+		<programmer>
+			<name>Caterina</name>
+		</programmer>
 		<programmer>
 			<name>AVRISP</name>
 		</programmer>
 		<section class="HexWritePage">
-			<name>FLASH</name>
+			<name>FLASH-0x7000</name>
 			<start>0</start>
 			<size>0x8000</size>
 			<pagesize>64</pagesize>
@@ -130,8 +168,161 @@
 		<section class="Hex">
 			<name>FUSES</name>
 			<start>0x8400</start>
-			<blank>0x4199ffff</blank>
-			<size>4</size>
+			<blank>0x4199ffffff</blank>
+			<size>5</size>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32L15xxB</name>
+		<id>0x416</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x20000</size>
+			<pagesize>256</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32L15xxC</name>
+		<id>0x427</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x40000</size>
+			<pagesize>256</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32F100xx</name>
+		<id>0x420</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x20000</size>
+			<pagesize>1024</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32F102R8</name>
+		<id>0x410</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x10000</size>
+			<pagesize>1024</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32F05x</name>
+		<id>0x0440</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x10000</size>
+			<pagesize>1024</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32F03x</name>
+		<id>0x444</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x08000</size>
+			<pagesize>1024</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32F07xB</name>
+		<id>0x448</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x20000</size>
+			<pagesize>2048</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32F37xx</name>
+		<id>0x432</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x40000</size>
+			<pagesize>2048</pagesize>
+			<blank>0xff</blank>
+			<type>2</type>
+		</section>
+	</device>
+	<device>
+		<manufacturer>STMicroelectronics</manufacturer>
+		<name>STM32F09x</name>
+		<id>0x442</id>
+		<voltage>3.3</voltage>
+		<programmer>
+			<name>STM32SERIAL</name>
+		</programmer>
+		<section class="HexWritePage">
+			<name>FLASH</name>
+			<start>0x08000000</start>
+			<size>0x40000</size>
+			<pagesize>2048</pagesize>
+			<blank>0xff</blank>
 			<type>2</type>
 		</section>
 	</device>
