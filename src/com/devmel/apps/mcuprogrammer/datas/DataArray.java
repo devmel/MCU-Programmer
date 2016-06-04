@@ -6,18 +6,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.devmel.apps.mcuprogrammer.sections.Memory;
 import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
+import com.devmel.tools.Hexadecimal;
 import com.devmel.tools.IntelHex;
 
 public class DataArray {
-	public String voltage = null;
-	public byte[] defaultId = null;
-	
 	private byte defaultValue = (byte) 0xFF;
 
 	public String filePath;
@@ -173,7 +173,65 @@ public class DataArray {
 		}
 		return ret;
 	}
-
-
-
+	
+	//Codec (a = auto ; r = binary ; i = intelHex ; d = decimal array ; h = hexadecimal array)
+	public int saveSection(String filename, byte codec, Memory section){
+		int ret = 0;
+		PrintStream out = null;
+		try {
+			if(codec != 'm' && filename != null && filename.length() > 0){
+				out = new PrintStream(new FileOutputStream(filename));
+				if(codec == 'a'){
+					if (filename.endsWith("hex")) {
+						codec = 'i';
+					}else{
+						codec = 'r';
+					}
+				}
+			}
+			if(!saveSection(out, codec, section)){
+				ret = -1;
+			}
+		} catch (IOException e) {
+			ret = -10;
+		} finally{
+			if(out != null)
+				out.close();
+		}
+		return ret;
+	}
+	
+	//Codec (r = binary ; i = intelHex ; d = decimal array ; h = hexadecimal array)
+	public boolean saveSection(PrintStream out, byte codec, Memory section) throws IOException{
+		boolean ret = false;
+		if(out != null && section != null && rawdata != null){
+			if(codec == 'r'){
+				out.write(rawdata, section.startAddr, section.size);
+				out.flush();
+				ret = true;
+			}else if(codec == 'i'){
+				IntelHex h = new IntelHex();
+				byte[] data = new byte[section.size];
+				System.arraycopy(rawdata, section.startAddr, data, 0, data.length);
+				h.addSegment(0, data);
+				h.exportStream(out);
+				ret = true;
+			}else if(codec == 'd'){
+				for(int i=0;i<section.size;i++){
+					if(i > 0)
+						out.print(",");
+					out.print((rawdata[section.startAddr+i]&0xff));
+				}
+				out.println();
+			}else if(codec == 'h'){
+				for(int i=0;i<section.size;i++){
+					if(i > 0)
+						out.print(",");
+					out.print("0x"+Hexadecimal.fromByte(rawdata[section.startAddr+i]));
+				}
+				out.println();
+			}
+		}
+		return ret;
+	}
 }

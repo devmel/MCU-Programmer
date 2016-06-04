@@ -1,40 +1,39 @@
 package com.devmel.apps.mcuprogrammer.datas;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Vector;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import nanoxml.XMLElement;
 
 import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
 import com.devmel.apps.mcuprogrammer.sections.MemoryHexWriteSector;
 import com.devmel.tools.Hexadecimal;
 
+@SuppressWarnings("unchecked")
 public class TargetsConfig {
+    private XMLElement root = new XMLElement();
 	private URL resources;
-	private Document doc;
 	
 	public TargetsConfig(){}
 	
 	public boolean loadResource(URL resources){
 		boolean valid = false;
+		root = new XMLElement();
 		InputStream xml = null;
 		try {
 			xml = new URL(resources, "devices.xml").openStream();
-			DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			doc = dBuilder.parse(xml);
+            Reader reader = new InputStreamReader(xml);
+            root.parseFromReader(reader);
 			valid = true;
 			this.resources=resources;
 		} catch (Exception e) {
-			doc = null;
+//			e.printStackTrace();
 		}finally{
 			try {
 				xml.close();
@@ -48,64 +47,74 @@ public class TargetsConfig {
 		return resources;
 	}
 
-	public Object[] sections(String deviceName){
+	public Object[] sections(String targetName){
 		ArrayList<Object> sectionsList = new ArrayList<Object>();
-		Element device = getDevice(deviceName);
+		XMLElement device = getTarget(targetName);
 		if(device!=null){
-			NodeList nList = device.getChildNodes();
-			for (int i = 0; i < nList.getLength(); i++) {
-				try{
-					Node nNode = nList.item(i);
-					if(nNode.getNodeName().equalsIgnoreCase("section")){
-						Element eElement = (Element) nNode;
-						String className = eElement.getAttributeNode("class").getNodeValue();
-						//Hex class
-						if(className.startsWith("Hex")){
-							int readStartInt = 0;
-							int writeStartInt = 0;
-							
-							String name = eElement.getElementsByTagName("name").item(0).getTextContent();
-							String start = eElement.getElementsByTagName("start").item(0).getTextContent();
-							int startInt = Integer.decode(start);
-							String size = eElement.getElementsByTagName("size").item(0).getTextContent();
-							int sizeInt = Integer.decode(size);
-							NodeList b = eElement.getElementsByTagName("blank");
-							byte[] blankArray = new byte[]{(byte) 0xff};
-							if(b!=null && b.item(0)!=null){
-								String blank = b.item(0).getTextContent();
-								if(blank!=null && blank.startsWith("0x")){
-									blankArray = Hexadecimal.toBytes(blank.substring(2));
+			try{
+            	Vector<XMLElement> devChilds = device.getChildren();
+	            for(XMLElement eElement : devChilds){
+	               	if(eElement != null){
+	               		if(eElement.getName().equalsIgnoreCase("section")){
+							String className = eElement.getAttribute("class").toString();
+							//Hex class
+							if(className.startsWith("Hex")){
+								String name = null;
+								int startInt = 0;
+								int sizeInt = 0;
+								int typeInt = 0;
+								byte[] blankArray = new byte[]{(byte) 0xff};
+								int readStartInt = 0;
+								int writeStartInt = 0;
+								int pagesizeInt = 0;
+								
+								//Search childs element
+								Vector<XMLElement> sectionChilds = eElement.getChildren();
+		    		            for(XMLElement sectionChild : sectionChilds){
+				               		if(sectionChild.getName().equals("name")){
+				               			name = sectionChild.getContent();
+				               		}
+				               		if(sectionChild.getName().equals("start")){
+				               			String start = sectionChild.getContent();
+				               			startInt = Integer.decode(start);
+				               		}
+				               		if(sectionChild.getName().equals("size")){
+				               			String size = sectionChild.getContent();
+				               			sizeInt = Integer.decode(size);
+				               		}
+				               		if(sectionChild.getName().equals("type")){
+				               			String type = sectionChild.getContent();
+				               			typeInt = Integer.decode(type);
+				               		}
+				               		if(sectionChild.getName().equals("blank")){
+				               			String blank = sectionChild.getContent();
+										if(blank!=null && blank.startsWith("0x")){
+											blankArray = Hexadecimal.toBytes(blank.substring(2));
+										}
+				               		}
+				               		if(sectionChild.getName().equals("readstart")){
+				               			String readstart = sectionChild.getContent();
+				               			readStartInt = Integer.decode(readstart);
+				               		}
+				               		if(sectionChild.getName().equals("writestart")){
+				               			String writestart = sectionChild.getContent();
+				               			writeStartInt = Integer.decode(writestart);
+				               		}
+				               		if(sectionChild.getName().equals("pagesize")){
+				               			String pagesize = sectionChild.getContent();
+				               			pagesizeInt = Integer.decode(pagesize);
+				               		}
+		    		            }
+								if(className.equalsIgnoreCase("HexWritePage")){
+									sectionsList.add(new MemoryHexWriteSector(name, startInt, readStartInt, writeStartInt, sizeInt, pagesizeInt, typeInt, blankArray));
+								}else if(className.equalsIgnoreCase("Hex")){
+									sectionsList.add(new MemoryHex(name, startInt, readStartInt, writeStartInt, sizeInt, typeInt, blankArray));
 								}
 							}
-							
-							String type = eElement.getElementsByTagName("type").item(0).getTextContent();
-							int typeInt = Integer.decode(type);
-							
-							NodeList nodeDevicestart = eElement.getElementsByTagName("readstart");
-							if(nodeDevicestart!=null && nodeDevicestart.item(0)!=null){
-								String devicestart = nodeDevicestart.item(0).getTextContent();
-								readStartInt = Integer.decode(devicestart);
-							}
-
-							nodeDevicestart = eElement.getElementsByTagName("writestart");
-							if(nodeDevicestart!=null && nodeDevicestart.item(0)!=null){
-								String devicestart = nodeDevicestart.item(0).getTextContent();
-								writeStartInt = Integer.decode(devicestart);
-							}
-							
-							if(className.equalsIgnoreCase("HexWritePage")){
-								String pagesize = eElement.getElementsByTagName("pagesize").item(0).getTextContent();
-								int pagesizeInt = Integer.decode(pagesize);
-								sectionsList.add(new MemoryHexWriteSector(name, startInt, readStartInt, writeStartInt, sizeInt, pagesizeInt, typeInt, blankArray));
-							}else if(className.equalsIgnoreCase("Hex")){
-								sectionsList.add(new MemoryHex(name, startInt, readStartInt, writeStartInt, sizeInt, typeInt, blankArray));
-							}
-						}
-					}
-				}catch(Exception e){
-//					e.printStackTrace();
-				}
-			}
+	               		}
+                	}
+	            }
+			}catch(Exception e){}
 		}
 		Object[] sections = new Object[sectionsList.size()];
 		sections = sectionsList.toArray(sections);
@@ -114,19 +123,18 @@ public class TargetsConfig {
 
 	public String[] manufacturerList(){
 		Set<String> manufacturerList = new HashSet<String>();
-		if(doc != null){
-			NodeList nList = doc.getElementsByTagName("device");
-			for (int i = 0; i < nList.getLength(); i++) {
-				try{
-					Node nNode = nList.item(i);
-					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-						Element eElement = (Element) nNode;
-						manufacturerList.add(eElement.getElementsByTagName("manufacturer").item(0).getTextContent());
-					}
-				}catch(Exception e){
-	//				e.printStackTrace();
-				}
-			}
+		if(root != null){
+			try{
+				Vector<XMLElement> nList = root.getChildren();
+	            for(XMLElement nNode : nList){
+	            	Vector<XMLElement> devChilds = nNode.getChildren();
+		            for(XMLElement devChild : devChilds){
+		               	if(devChild != null && devChild.getName().equals("manufacturer")){
+		               		manufacturerList.add(devChild.getContent());
+	                	}
+		            }
+	            }
+			}catch(Exception e){}
 		}
 		String[] names = new String[manufacturerList.size()];
 		manufacturerList.toArray(names);
@@ -135,113 +143,114 @@ public class TargetsConfig {
 
 	public String[] nameList(String manufacturer){
 		Set<String> nameList = new HashSet<String>();
-		if(doc != null){
-			NodeList nList = doc.getElementsByTagName("device");
-			for (int i = 0; i < nList.getLength(); i++) {
-				try{
-					Node nNode = nList.item(i);
-					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-						Element eElement = (Element) nNode;
-						String mnf = eElement.getElementsByTagName("manufacturer").item(0).getTextContent();
-						if(manufacturer==null || manufacturer.equalsIgnoreCase(mnf)){
-							nameList.add(eElement.getElementsByTagName("name").item(0).getTextContent());
-						}
-					}
-				}catch(Exception e){
-	//				e.printStackTrace();
-				}
-			}
+		if(root != null && manufacturer != null){
+			try{
+				Vector<XMLElement> nList = root.getChildren();
+	            for(XMLElement nNode : nList){
+	            	String name = null;
+	            	boolean isInList = false;
+	            	Vector<XMLElement> devChilds = nNode.getChildren();
+		            for(XMLElement devChild : devChilds){
+		               	if(devChild != null){
+		               		if(devChild.getName().equals("manufacturer") && manufacturer.equals(devChild.getContent())){
+			               		isInList = true;
+		               		}
+		               		if(devChild.getName().equals("name")){
+			               		name = devChild.getContent();
+		               		}
+	                	}
+		            }
+		            if(isInList && name != null){
+		            	nameList.add(name);
+		            }
+	            }
+			}catch(Exception e){}
 		}
 		String[] names = new String[nameList.size()];
 		nameList.toArray(names);
 		return names;
 	}
 	
-	public String[] programmers(String deviceName){
+	public String[] programmers(String targetName){
 		ArrayList<String> programmers = new ArrayList<String>();
-		Element device = getDevice(deviceName);
+		XMLElement device = getTarget(targetName);
 		if(device!=null){
-			NodeList nList = device.getChildNodes();
-			
-			for (int i = 0; i < nList.getLength(); i++) {
-				try{
-					Node nNode = nList.item(i);
-					if(nNode.getNodeName().equalsIgnoreCase("programmer")){
-						Element eElement = (Element) nNode;
-						programmers.add(eElement.getElementsByTagName("name").item(0).getTextContent());
-					}
-				}catch(Exception e){
-//					e.printStackTrace();
-				}
-			}
-		}		
+			try{
+            	Vector<XMLElement> devChilds = device.getChildren();
+	            for(XMLElement devChild : devChilds){
+	               	if(devChild != null){
+	               		if(devChild.getName().equalsIgnoreCase("programmer")){
+	    	            	Vector<XMLElement> progChilds = devChild.getChildren();
+	    		            for(XMLElement progChild : progChilds){
+			               		if(progChild.getName().equals("name")){
+			               			programmers.add(progChild.getContent());
+			               		}
+	    		            }
+	               		}
+                	}
+	            }
+			}catch(Exception e){}
+		}
 		String[] names = new String[programmers.size()];
 		names = programmers.toArray(names);
 		return names;
 	}
 	
-	public String getVoltage(String deviceName){
+	public String getVoltage(String targetName){
 		String voltage = null;
-		Element device = getDevice(deviceName);
+		XMLElement device = getTarget(targetName);
 		if(device!=null){
-			NodeList nList = device.getChildNodes();
-			
-			for (int i = 0; i < nList.getLength(); i++) {
-				try{
-					Node nNode = nList.item(i);
-					if(nNode.getNodeName().equalsIgnoreCase("voltage")){
-						Element eElement = (Element) nNode;
-						voltage = eElement.getChildNodes().item(0).getTextContent();
-					}
-				}catch(Exception e){
-//					e.printStackTrace();
-				}
-			}
-		}		
+			try{
+            	Vector<XMLElement> devChilds = device.getChildren();
+	            for(XMLElement devChild : devChilds){
+	               	if(devChild != null){
+	               		if(devChild.getName().equalsIgnoreCase("voltage")){
+	               			voltage = devChild.getContent();
+	               		}
+                	}
+	            }
+			}catch(Exception e){}
+		}
 		return voltage;
 	}
 
-	public byte[] getId(String deviceName){
+	public byte[] getId(String targetName){
 		byte[] id = null;
-		Element device = getDevice(deviceName);
+		XMLElement device = getTarget(targetName);
 		if(device!=null){
-			NodeList nList = device.getChildNodes();
-			
-			for (int i = 0; i < nList.getLength(); i++) {
-				try{
-					Node nNode = nList.item(i);
-					if(nNode.getNodeName().equalsIgnoreCase("id")){
-						Element eElement = (Element) nNode;
-						String val = eElement.getChildNodes().item(0).getTextContent();
-						id = Hexadecimal.toBytes(val.substring(2));
-					}
-				}catch(Exception e){
-//					e.printStackTrace();
-				}
-			}
-		}		
+			try{
+            	Vector<XMLElement> devChilds = device.getChildren();
+	            for(XMLElement devChild : devChilds){
+	               	if(devChild != null){
+	               		if(devChild.getName().equalsIgnoreCase("id")){
+	               			String val = devChild.getContent();
+							id = Hexadecimal.toBytes(val.substring(2));
+	               		}
+                	}
+	            }
+			}catch(Exception e){}
+		}
 		return id;
 	}
 
-	private Element getDevice(String deviceName){
-		Element eElement = null;
-		if(doc != null){
-			NodeList nList = doc.getElementsByTagName("device");
-			for (int i = 0; i < nList.getLength(); i++) {
-				try{
-					Node nNode = nList.item(i);
-					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-						eElement = (Element) nNode;
-						if(eElement.getElementsByTagName("name").item(0).getTextContent().equalsIgnoreCase(deviceName)){
-							break;
-						}
-						eElement = null;
-					}
-				}catch(Exception e){
-	//				e.printStackTrace();
-				}
-			}
+	private XMLElement getTarget(String targetName){
+		XMLElement ret = null;
+		if(root != null && targetName != null){
+			try{
+				Vector<XMLElement> nList = root.getChildren();
+	            for(XMLElement nNode : nList){
+	            	Vector<XMLElement> devChilds = nNode.getChildren();
+		            for(XMLElement devChild : devChilds){
+		               	if(devChild != null){
+		               		if(devChild.getName().equals("name") && targetName.equals(devChild.getContent())){
+		               			ret = nNode;
+		               			break;
+		               		}
+	                	}
+		            }
+	            }
+			}catch(Exception e){}
 		}
-		return eElement;
+		return ret;
 	}
 }

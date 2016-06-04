@@ -8,7 +8,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import com.devmel.apps.mcuprogrammer.controller.MainController;
+import com.devmel.apps.mcuprogrammer.controller.GUIController;
 import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.view.swing.TargetToolsBar;
 import com.devmel.apps.mcuprogrammer.view.swing.TargetSelectionBar;
@@ -19,17 +19,18 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Locale;
 
 import javax.swing.JSeparator;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileFilter;
 
 public class MainView extends JFrame{
 	private static final long serialVersionUID = -7648450274854220447L;
-	private final FileNameExtensionFilter filetype = new FileNameExtensionFilter("*.hex, *.bin", "hex", "bin");
-	private final FileNameExtensionFilter filetypeTarget = new FileNameExtensionFilter("*.zip, *.jar", "zip", "jar");
-	private MainController controller;
+	private final FilterFileNameExtension filetype = new FilterFileNameExtension("Data (*.hex, *.bin)", "hex", "bin");
+	private final FilterFileNameExtension filetypeTarget = new FilterFileNameExtension("Archive (*.zip, *.jar)", "zip", "jar");
+	private GUIController controller;
 	public JTabbedPane tabbedPane;
 	public JMenuItem mntmSave;
 	public DeviceSelectBar deviceSelectBar;
@@ -38,6 +39,11 @@ public class MainView extends JFrame{
 	public StatusBar statusBar;
 
 	public MainView(){
+		try {
+			javax.swing.UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 		this.setTitle(R.bundle.getString("MainView.3"));
 		this.setBounds(100, 100, 630, 640);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -162,7 +168,7 @@ public class MainView extends JFrame{
 
 	
 	
-	public void setController(MainController controller) {
+	public void setController(GUIController controller) {
 		this.controller = controller;
 		deviceSelectBar.setController(controller);
 		targetSelectionBar.setController(controller);
@@ -217,4 +223,67 @@ public class MainView extends JFrame{
 			controller.saveFile(chooser.getSelectedFile());
 		}
 	}
+	
+	public final class FilterFileNameExtension extends FileFilter
+	{
+
+	    public FilterFileNameExtension(String s, String... as)
+	    {
+	        if(as == null || as.length == 0)
+	            throw new IllegalArgumentException("Extensions must be non-null and not empty");
+	        description = s;
+	        extensions = new String[as.length];
+	        lowerCaseExtensions = new String[as.length];
+	        for(int i = 0; i < as.length; i++)
+	        {
+	            if(as[i] == null || as[i].length() == 0)
+	                throw new IllegalArgumentException("Each extension must be non-null and not empty");
+	            extensions[i] = as[i];
+	            lowerCaseExtensions[i] = as[i].toLowerCase(Locale.ENGLISH);
+	        }
+
+	    }
+
+	    public boolean accept(File file)
+	    {
+	        if(file != null)
+	        {
+	            if(file.isDirectory())
+	                return true;
+	            String s = file.getName();
+	            int i = s.lastIndexOf('.');
+	            if(i > 0 && i < s.length() - 1)
+	            {
+	                String s1 = s.substring(i + 1).toLowerCase(Locale.ENGLISH);
+	                String as[] = lowerCaseExtensions;
+	                int j = as.length;
+	                for(int k = 0; k < j; k++)
+	                {
+	                    String s2 = as[k];
+	                    if(s1.equals(s2))
+	                        return true;
+	                }
+
+	            }
+	        }
+	        return false;
+	    }
+
+	    public String getDescription()
+	    {
+	        return description;
+	    }
+
+	    public String[] getExtensions()
+	    {
+	        String as[] = new String[extensions.length];
+	        System.arraycopy(extensions, 0, as, 0, extensions.length);
+	        return as;
+	    }
+
+	    private final String description;
+	    private final String extensions[];
+	    private final String lowerCaseExtensions[];
+	}
+
 }

@@ -9,10 +9,9 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="libs/bridj-0.6.2.jar"/>
-	<classpathentry kind="lib" path="libs/slf4j-api-1.7.2.jar"/>
-	<classpathentry kind="lib" path="libs/slf4j-simple-1.7.13.jar"/>
-	<classpathentry kind="lib" path="libs/webcam-capture-0.3.10.jar"/>
-	<classpathentry kind="lib" path="libs/zxing-core-3.1.0-java1.6.jar"/>
-	<classpathentry kind="lib" path="libs/zxing-j2se-3.1.0-java1.6.jar"/>
+	<classpathentry kind="lib" path="libs/webcam-capture.jar"/>
+	<classpathentry kind="lib" path="libs/zxing-core-min.jar"/>
+	<classpathentry kind="lib" path="libs/zxing-j2se-min.jar"/>
+	<classpathentry kind="lib" path="libs/nanoxml-lite-2.2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

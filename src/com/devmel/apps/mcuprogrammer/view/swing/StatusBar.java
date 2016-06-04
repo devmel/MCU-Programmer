@@ -5,9 +5,10 @@ import javax.swing.JProgressBar;
 import javax.swing.JLabel;
 
 import com.devmel.apps.mcuprogrammer.R;
+import com.devmel.apps.mcuprogrammer.sections.Memory.StatusListener;
 import com.devmel.apps.mcuprogrammer.view.IStatus;
 
-public class StatusBar extends JPanel implements IStatus{
+public class StatusBar extends JPanel implements IStatus, StatusListener{
 	private static final long serialVersionUID = -257113780246545239L;
 	private final JProgressBar progressBar;
 	private final JLabel lblStatus;
@@ -39,5 +40,17 @@ public class StatusBar extends JPanel implements IStatus{
 	public void stopProgress(){
 		progressBar.setVisible(false);
 		lblStatus.setVisible(true);
+	}
+
+	@Override
+	public void update(long done, long total){
+    	double percentDouble = (double)done/(double)total*100.0;
+        int percent = (int) Math.floor(percentDouble);
+		startProgress(percent);
+	}
+
+	@Override
+	public void clear() {
+		
 	}
 }

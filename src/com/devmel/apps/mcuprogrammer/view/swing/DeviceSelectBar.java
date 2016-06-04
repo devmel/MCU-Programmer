@@ -2,7 +2,7 @@ package com.devmel.apps.mcuprogrammer.view.swing;
 
 import javax.swing.JPanel;
 
-import com.devmel.apps.mcuprogrammer.controller.MainController;
+import com.devmel.apps.mcuprogrammer.controller.GUIController;
 import com.devmel.apps.mcuprogrammer.R;
 
 import java.awt.event.ActionEvent;
@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 
 public class DeviceSelectBar extends JPanel{
 	private static final long serialVersionUID = -257113780246545239L;
-	private MainController controller;
+	private GUIController controller;
 	private final JComboBox<String> deviceSelect;
 	private final JCheckBox chckbxLock;
 	private final JButton btnAdd;
@@ -32,7 +32,7 @@ public class DeviceSelectBar extends JPanel{
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				if(controller!=null){
-					controller.reloadDeviceList();
+					controller.loadDeviceList();
 				}
 			}
 			@Override
@@ -94,7 +94,7 @@ public class DeviceSelectBar extends JPanel{
 		
 	}
 	
-	public void setController(MainController controller) {
+	public void setController(GUIController controller) {
 		this.controller = controller;
 	}
 

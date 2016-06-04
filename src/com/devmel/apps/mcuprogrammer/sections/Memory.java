@@ -1,9 +1,10 @@
 package com.devmel.apps.mcuprogrammer.sections;
 
 public abstract class Memory {
-	public String name;
-	public int startAddr;
-	public int size;
+	public final String name;
+	public final int startAddr;
+	public final int size;
+	protected StatusListener status;
 	
 	public Memory(String name, int startAddr, int size){
 		this.name=name;
@@ -11,4 +12,12 @@ public abstract class Memory {
 		this.size=size;
 	}
 	
+	public void setStatusListener(StatusListener status){
+		this.status=status;
+	}
+	
+	public interface StatusListener{
+		public void update(long done, long total);
+	    public void clear();
+	}
 }

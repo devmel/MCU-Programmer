@@ -3,20 +3,19 @@ package com.devmel.apps.mcuprogrammer.controller;
 import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
+
+import javax.swing.JOptionPane;
 
 import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.datas.DataArray;
 import com.devmel.apps.mcuprogrammer.datas.TargetsConfig;
+import com.devmel.apps.mcuprogrammer.sections.Memory;
 import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
 import com.devmel.apps.mcuprogrammer.view.swing.HexView;
 import com.devmel.apps.mcuprogrammer.view.swing.MainView;
 import com.devmel.apps.mcuprogrammer.view.swing.WiringDiagramView;
-import com.devmel.communication.nativesystem.Uart;
 import com.devmel.programming.IProgramming;
 import com.devmel.storage.IBase;
 import com.devmel.storage.Node;
@@ -24,104 +23,68 @@ import com.devmel.storage.SimpleIPConfig;
 import com.devmel.tools.Hexadecimal;
 import com.devmel.tools.IPAddress;
 
-public class MainController {
-	private final static URL defaultTargetfiles = MainController.class.getResource("/targets/");
+public class GUIController extends BaseController{
 	private final List<HexDataController> hexControllers = new ArrayList<HexDataController>();
 	private final WiringDiagramView wiringView;
-	private final IBase baseStorage;
 	private final Node devices;
 	private final DataArray tabdata;
-	private final TargetsConfig targetsConfig;
 	private final MainView gui;
 	
 	private Thread thread = null;
-	
-	//Device
-	private DeviceType deviceType;
-	private String deviceName;
-	//Programmer
-	private String programmer;
-	private IProgramming program;
 
-	public MainController(IBase userPrefs, DataArray tabdata, TargetsConfig targetsConfig, MainView gui){
+	public GUIController(IBase userPrefs, TargetsConfig targetsConfig, DataArray tabdata, MainView gui){
+		super(userPrefs, targetsConfig);
 		this.wiringView = new WiringDiagramView(targetsConfig);
-		this.baseStorage = userPrefs;
-		this.devices = new Node(this.baseStorage, "Linkbus");
+		this.devices = new Node(baseStorage, "Linkbus");
 		this.tabdata=tabdata;
-		this.targetsConfig=targetsConfig;
 		this.gui=gui;
 	}
 	
 	public void initialize(){
-		reloadResourcesTarget();
+		//Splash screen
+		if(baseStorage.getString("configStart") == null){
+			String[] options = {"Computer", "LinkBus"};
+			int ret = JOptionPane.showOptionDialog(null, R.bundle.getString("select_device_port"), R.bundle.getString("select_port"), JOptionPane.NO_OPTION, JOptionPane.DEFAULT_OPTION, null, options , options[0]);
+			if(ret >= 0 && ret < options.length){
+				baseStorage.saveString("configStart", options[ret]);
+			}
+		}
+		if("LinkBus".equals(baseStorage.getString("configStart"))){
+			addIPDeviceClick();
+			baseStorage.saveString("configStart", "LB");
+		}
+		super.loadTargetConfig();
 		gui.statusBar.stopProgress();
 		gui.hideTargetTools();
-		reloadDeviceList();
+		loadManufacturerList();
+		loadDeviceList();
 	}
 	
-	public void reloadDeviceList(){
-		Vector<String> list = new Vector<String>();
-		String[] sysDeviceList = Uart.list();
-		if(sysDeviceList!=null){
-			for(String devStr:sysDeviceList){
-				list.add(devStr);
-			}
-		}
-		
-		String[] ipDeviceList = this.devices.getChildNames();
-		if(ipDeviceList!=null){
-			for(String devStr:ipDeviceList){
-				SimpleIPConfig dev = SimpleIPConfig.createFromNode(devices, devStr);
-				if(dev!=null){
-					devStr = devStr+" - "+dev.getIpAsText();
-					list.add(devStr);
-				}
-			}
-		}
-		String[] bList = new String[list.size()];
-		list.toArray(bList);
-		gui.deviceSelectBar.setListDevices(bList);
+	public void loadDeviceList(){
+		gui.deviceSelectBar.setListDevices(super.getDeviceList());
 	}
-
+	
+	public MainView getGUI(){
+		return this.gui;
+	}
 	
 	/******************************** IP DEVICE *********************************/
+	@Override
 	public void selectDevice(final String name) {
 		deviceUnbuild(false);
-		deviceType = null;
-		deviceName = null;
-		if (name != null && !name.equals(R.bundle.getString("MainController.2"))) {
-			if(name.contains(" - ")){
-				String[] names = name.split(" - ");
-				if(names!=null && names.length>0){
-					String[] ipDeviceList = this.devices.getChildNames();
-					for(String devStr:ipDeviceList){
-						if(devStr.equals(names[0])){
-							deviceType = DeviceType.LINKBUS;
-							deviceName = devStr;
-							SimpleIPConfig device = SimpleIPConfig.createFromNode(devices, deviceName);
-							if(device!=null){
-								gui.deviceSelectBar.setLock(device.getLock());
-								gui.deviceSelectBar.setDeleteDeviceEnabled(true);
-							}
-							break;
-						}
-					}
-				}
-			}else{
-				String[] sysDeviceList = Uart.list();
-				for(String devStr:sysDeviceList){
-					if(devStr.equals(name)){
-						deviceType = DeviceType.UART;
-						deviceName = name;
-						gui.deviceSelectBar.setDeleteDeviceEnabled(true);
-						break;
-					}
-				}
+		super.selectDevice(name);
+		if(deviceType == DeviceType.LINKBUS){
+			SimpleIPConfig device = SimpleIPConfig.createFromNode(devices, deviceName);
+			if(device!=null){
+				gui.deviceSelectBar.setLock(device.getLock());
+				gui.deviceSelectBar.setDeleteDeviceEnabled(true);
 			}
-			//Update port in sections
-			wiringView.setPortClass(deviceType.packageName);
-			updateWiringView();
+		}else{
+			gui.deviceSelectBar.setDeleteDeviceEnabled(false);
 		}
+		//Update port in sections
+		wiringView.setPortClass(deviceType.packageName);
+		updateWiringView();
 	}
 
 	public void setIPLock(boolean selected) {
@@ -159,7 +122,7 @@ public class MainController {
 					device.setGateway(gatewayEnabled);
 					device.save(devices);
 				}
-				reloadDeviceList();
+				loadDeviceList();
 			} catch (Exception e1) {
 				e1.printStackTrace();
 				err = -5;
@@ -178,7 +141,7 @@ public class MainController {
 					this.devices.removeChild(names[0]);
 				}
 			}
-			reloadDeviceList();
+			loadDeviceList();
 		} else {
 			gui.deviceSelectBar.removeDeviceConfirm(name);
 		}
@@ -196,11 +159,9 @@ public class MainController {
 	
 	public void selectTarget(String target){
 		deviceUnbuild(false);
-		//Get defaultId and voltage
-		tabdata.defaultId = targetsConfig.getId(target);
-		tabdata.voltage = targetsConfig.getVoltage(target);
+		//Get voltage
 		wiringView.setTarget(target);
-		wiringView.setVoltage(tabdata.voltage);
+		wiringView.setVoltage(targetsConfig.getVoltage(target));
 		//Get config
 		String[] programmers = targetsConfig.programmers(target);
 		if(programmers!=null && programmers.length>0){
@@ -209,6 +170,9 @@ public class MainController {
 			if(sections!=null){
 				tabdata.sections.clear();
 				for(int i=0;i<sections.length;i++){
+					if(sections[i] instanceof Memory){
+						((Memory)sections[i]).setStatusListener(gui.statusBar);
+					}
 					tabdata.sections.add(sections[i]);
 				}
 				tabdata.sectionsLock = true;
@@ -232,13 +196,10 @@ public class MainController {
 		selectProgrammer(gui.targetSelectionBar.getProgrammer());
 	}
 	
+	@Override
 	public void selectProgrammer(String programmer){
 		deviceUnbuild(false);
-		if(programmer!=null && programmer.equals("")){
-			this.programmer=null;
-		}else{
-			this.programmer=programmer;
-		}
+		super.selectProgrammer(programmer);
 		//Update programmer in sections
 		wiringView.setProgrammer(programmer);
 		updateWiringView();
@@ -259,7 +220,7 @@ public class MainController {
 				String status = null;
 				if(deviceName!=null){
 					if(close==false){
-						deviceBuild();
+						loadDevice();
 						if(program!=null){
 							//Open target
 							try {
@@ -344,7 +305,7 @@ public class MainController {
 				String status = null;
 				if(program!=null && program.isOpen()==true){
 					try{
-						if(memory.read(gui.statusBar, program, tabdata.rawdata, 0)<0){
+						if(memory.read(program, tabdata.rawdata, 0)<0){
 							status = R.bundle.getString("MainController.13")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}
 					}catch(IOException e) {
@@ -366,7 +327,7 @@ public class MainController {
 				String status = null;
 				if(program!=null && program.isOpen()==true){
 					try{
-						if(memory.write(gui.statusBar, program, tabdata.rawdata, 0)<0){
+						if(memory.write(program, tabdata.rawdata, 0)<0){
 							status = R.bundle.getString("MainController.15")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}
 					}catch(IOException e) {
@@ -388,7 +349,7 @@ public class MainController {
 				String status = null;
 				if(program!=null && program.isOpen()==true){
 					try{
-						int verif = memory.verify(gui.statusBar, program, tabdata.rawdata, 0);
+						int verif = memory.verify(program, tabdata.rawdata, 0);
 						if(verif<-1){
 							status = R.bundle.getString("MainController.17")+Integer.toHexString(memory.progAddress).toUpperCase();
 						}else if(verif==-1){
@@ -455,23 +416,12 @@ public class MainController {
 		String uri = null;
 		if(file != null){
 			uri = file.toURI().toString();
-			if(uri.endsWith(".zip") || uri.endsWith(".jar")){
-				uri = "jar:"+uri+"!/";
-			}
-			baseStorage.saveString("mcuprog.targetfiles", uri);
-			reloadResourcesTarget();
+			super.loadTargetConfig(uri);
+			loadManufacturerList();
 		}
 	}
 	
-	private void reloadResourcesTarget(){
-		boolean resourcesLoaded = false;
-		try {
-			URL resources = new URL(baseStorage.getString("mcuprog.targetfiles"));
-			resourcesLoaded = targetsConfig.loadResource(resources);
-		} catch (Exception e) {}
-		if(resourcesLoaded == false){
-			targetsConfig.loadResource(defaultTargetfiles);
-		}
+	private void loadManufacturerList(){
 		String[] names = targetsConfig.manufacturerList();
 		String[] nnames = new String[names.length+1];
 		nnames[0] = R.bundle.getString("MainController.1");
@@ -561,48 +511,7 @@ public class MainController {
 	
 	/******************************** DEVICE COMMUNICATION *********************************/
 	
-	private String deviceException(IOException exception){
-		if(exception==null){
-			return "";
-		}
-		return exception.getMessage();
-	}
 	
-	private synchronized void deviceBuild(){
-		if(program == null && programmer != null 
-				&& deviceType != null && deviceName != null){
-			//Load class
-			Class<?> c = null;
-			try {
-				c = Class.forName(deviceType.packageName+"."+programmer);
-			} catch (ClassNotFoundException e) {
-			}
-			if(c!=null){
-				Object device = null;
-
-				if(deviceType==DeviceType.UART){
-					try {
-						device = new Uart(deviceName);
-					} catch (IOException e) {
-						e.printStackTrace();
-						device=null;
-					}
-				}
-				else if(deviceType==DeviceType.LINKBUS){
-					device = SimpleIPConfig.createFromNode(devices, deviceName);
-				}
-				if(device!=null){
-					try {
-						Constructor<?> constructor = c.getConstructor(device.getClass());
-						IProgramming o = (IProgramming)constructor.newInstance(device);
-						program = o;
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-	}
 	private synchronized void deviceUnbuild(boolean wait){
 		cancel();
 		Runnable r = new Runnable() {
@@ -637,14 +546,4 @@ public class MainController {
 		}
 	}
 	
-	public enum DeviceType{
-		LINKBUS("com.devmel.programming.linkbus"),
-		UART("com.devmel.programming.uart");
-
-		public final String packageName;
-		
-		DeviceType(String packageName) {
-			this.packageName = packageName;
-		}
-	}
 }

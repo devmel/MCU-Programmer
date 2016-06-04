@@ -5,12 +5,12 @@ import com.devmel.apps.mcuprogrammer.sections.MemoryHex;
 import com.devmel.apps.mcuprogrammer.view.IHexView;
 
 public class HexDataController {
-	private final MainController mainController;
+	private final GUIController mainController;
 	private final MemoryHex section;
 	private final IHexView hexView;
 	private boolean inProgress = false;
 	
-	public HexDataController(DataArray tabdata, MemoryHex section, IHexView hexView, MainController mainController){
+	public HexDataController(DataArray tabdata, MemoryHex section, IHexView hexView, GUIController mainController){
 		this.mainController=mainController;
 		this.section=section;
 		this.hexView=hexView;

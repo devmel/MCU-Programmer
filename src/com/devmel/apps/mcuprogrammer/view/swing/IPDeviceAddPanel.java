@@ -19,8 +19,9 @@ import javax.swing.JButton;
 
 import com.devmel.apps.mcuprogrammer.R;
 import com.devmel.apps.mcuprogrammer.tools.SearchQRCode;
-import com.devmel.apps.mcuprogrammer.tools.SpUrlParser;
+import com.devmel.storage.SimpleIPConfig;
 import com.devmel.tools.Hexadecimal;
+
 import javax.swing.JCheckBox;
 
 public class IPDeviceAddPanel extends JPanel {
@@ -110,15 +111,17 @@ public class IPDeviceAddPanel extends JPanel {
 				JOptionPane.showOptionDialog(null, search.getPanel(), R.bundle.getString("scan_lb_unit_code"), JOptionPane.NO_OPTION, JOptionPane.DEFAULT_OPTION, null, options , options[0]);
 				//Fill fields
 				if(search.getResult()!=null){
-					SpUrlParser deviceInfo = new SpUrlParser(search.getResult());
-					if(deviceInfo!=null){
+					try{
+						SimpleIPConfig config = new SimpleIPConfig("LB", search.getResult());
 						if(getName() == null || getName().equals(defaultName)){
-							String ip = Hexadecimal.fromBytes(deviceInfo.getIp());
+							String ip = Hexadecimal.fromBytes(config.getIp());
 							if(ip!=null && ip.length()>6)
 								fieldName.setText(defaultName+ip.substring(ip.length()-6));
 						}
-						fieldIP.setText(deviceInfo.getIpAsText());
-						fieldPassword.setText(deviceInfo.getPassword());
+						fieldIP.setText(config.getIpAsText());
+						fieldPassword.setText(config.getPasswordAsText());
+					}catch(Exception e){
+						JOptionPane.showMessageDialog(null, R.bundle.getString("DeviceSelectBar.10"));
 					}
 				}
 			}

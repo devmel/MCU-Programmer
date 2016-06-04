@@ -2,7 +2,7 @@ package com.devmel.apps.mcuprogrammer.view.swing;
 
 import javax.swing.JPanel;
 
-import com.devmel.apps.mcuprogrammer.controller.MainController;
+import com.devmel.apps.mcuprogrammer.controller.GUIController;
 import com.devmel.apps.mcuprogrammer.R;
 
 import java.awt.event.ActionEvent;
@@ -16,7 +16,7 @@ import javax.swing.JButton;
 
 public class TargetSelectionBar extends JPanel{
 	private static final long serialVersionUID = -257114752589545239L;
-	private MainController controller;
+	private GUIController controller;
 	private final JComboBox<String> manufacturerSelect;
 	private final JComboBox<String> deviceSelect;
 	private final JComboBox<String> programmerSelect;
@@ -46,7 +46,7 @@ public class TargetSelectionBar extends JPanel{
 		add(btnOpen);
 	}
 	
-	public void setController(MainController controller) {
+	public void setController(GUIController controller) {
 		this.controller = controller;
 	}
 	

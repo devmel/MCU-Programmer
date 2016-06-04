@@ -2,7 +2,6 @@ package com.devmel.apps.mcuprogrammer.sections;
 
 import java.io.IOException;
 
-import com.devmel.apps.mcuprogrammer.view.IStatus;
 import com.devmel.programming.IProgramming;
 
 public class MemoryHexWriteSector extends MemoryHex {
@@ -15,15 +14,11 @@ public class MemoryHexWriteSector extends MemoryHex {
 	}
 
 	@Override
-	public int write(IStatus status, IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
+	public int write(IProgramming program, byte[] rawdata, int fromAddr) throws IOException{
 		int ret = -1;
 		if (program!=null && program.isOpen()==true) {
 			progAddress = fromAddr;
 			while ( progAddress < this.size && !Thread.interrupted()){
-				double percent = progAddress * 100;
-				percent /= this.size;
-				status.startProgress((int) percent);
-
 				// Build page
 				int maxSize = pageSize;
 				if ((this.startAddr + progAddress + maxSize) > rawdata.length) {
@@ -48,6 +43,8 @@ public class MemoryHexWriteSector extends MemoryHex {
 				}
 				if (write) {
 					progAddress += pageSize;
+					if(status != null)
+						status.update(progAddress, size);
 					ret = 0;
 				} else {
 					ret = -1;

@@ -2,7 +2,7 @@ package com.devmel.apps.mcuprogrammer.view.swing;
 
 import javax.swing.JPanel;
 
-import com.devmel.apps.mcuprogrammer.controller.MainController;
+import com.devmel.apps.mcuprogrammer.controller.GUIController;
 import com.devmel.apps.mcuprogrammer.R;
 
 import java.awt.Color;
@@ -16,7 +16,7 @@ import javax.swing.SwingConstants;
 
 public class TargetToolsBar extends JPanel{
 	private static final long serialVersionUID = -257114752446545239L;
-	private MainController controller;
+	private GUIController controller;
 	private final JButton btnReadId;
 	private final JButton btnEraseAll;
 	private final JLabel targetId;
@@ -55,7 +55,7 @@ public class TargetToolsBar extends JPanel{
 		add(btnEraseAll);
 	}
 	
-	public void setController(MainController controller) {
+	public void setController(GUIController controller) {
 		this.controller = controller;
 	}
 	
